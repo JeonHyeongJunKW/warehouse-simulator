@@ -7,7 +7,29 @@ import json
 form_class = uic.loadUiType("./main_window.ui")[0]
 from PyQt5.QtCore import Qt
 from Map import *
-
+# class Widget4(QWidget):
+#
+#     def __init__(self, parent=None):
+#         QWidget.__init__(self, parent=parent)
+#         self.setWindowTitle("TSP 시뮬레이터")
+#         self.a = 0
+#         self.move(500,300)
+#         self.setFixedWidth(263)
+#         self.setFixedHeight(399)
+#         # self.show()
+#     def paintEvent(self, e):
+#         qp = QPainter()
+#         qp.begin(self)
+#         self.draw_line(qp)
+#         qp.end()
+#
+#     def draw_line(self,qp):
+#         qp.setPen(QPen(Qt.blue,8))
+#         qp.drawLine(30,230, 200, 50)
+#         qp.setPen(QPen(Qt.green, 12))
+#         qp.drawLine(140,60, 320, 280)
+#         qp.setPen(QPen(Qt.red,16))
+#         qp.drawLine(330, 250, 40, 190)
 
 
 class WindowClass(QMainWindow, form_class):
@@ -26,7 +48,9 @@ class WindowClass(QMainWindow, form_class):
         self.button_loadMap.clicked.connect(self.loadMap)
 
     def openMap(self):
-
+        if self.mapMaker :
+            del self.mapMaker
+        self.mapMaker = Widget_Warehouse()
         self.mapMaker.show()
 
     def loadMap(self):
