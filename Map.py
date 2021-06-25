@@ -653,6 +653,17 @@ class Widget_Warehouse(QWidget):
             self.edit_resolution_2.setText(str(self.map_resolution_2))
             self.slider_resolution.setValue(self.map_resolution)
             self.slider_resolution_2.setValue(self.map_resolution_2)
+            self.hide_warehouse_setting()
+
+            self.flag_hide_preview = False
+            self.pushMapsize.hide()
+            want_height = self.groupBox_map.geometry().top()
+            want_width = self.groupBox_shelf.geometry().left()
+            self.groupBox_shelf.move(want_width, want_height)
+            self.groupBox_shelf.show()
+            self.init_shelf_x = self.groupBox_shelf.geometry().left() + self.preview_shelf.geometry().center().x()
+            self.init_shelf_y = self.groupBox_shelf.geometry().top() + self.preview_shelf.geometry().center().y()
+            self.update()
 
     def mouseMoveEvent(self, e):
         self.current_mouse_x = e.x()
