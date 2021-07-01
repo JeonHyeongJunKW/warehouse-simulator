@@ -7,6 +7,7 @@ import json
 form_class = uic.loadUiType("./main_window.ui")[0]
 from PyQt5.QtCore import Qt
 from Map import *
+import os
 # class Widget4(QWidget):
 #
 #     def __init__(self, parent=None):
@@ -74,8 +75,9 @@ class WindowClass(QMainWindow, form_class):
 
 
 if __name__ == "__main__":
-
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] ='1'
     app = QApplication(sys.argv)
+    app.setAttribute(Qt.AA_EnableHighDpiScaling)
     myWindow = WindowClass()
     myWindow.show()
     app.exec_()
