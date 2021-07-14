@@ -7,16 +7,6 @@ import math
 import json
 
 
-#todo
-'''
-맵의 정보를 담은 클래스 
-1. 맵의 크기 
-2. 선반의 개수 및 크기, 위치 
-3. 선반내부 물건의 개수 및 종류
-4. 피킹 스테이션의 위치 및 개수 
-5. 충전 스테이션의 여부 및 위치 
-6. 패킹 스테이션의 위치 
-'''
 class Warehouse_Shelf :
     def __init__(self, center_x, center_y, shelf_index, shelf_shape =(2,3),item_type=[1,1,1,1,1,1] ,item_amount=[10,10,10,10,10,10],supply_limit= 3,infinite_amount = True):
         self.center_x = center_x
@@ -762,6 +752,7 @@ class Widget_Warehouse(QWidget):
         if self.mode == "Set Shelf":
             self.current_mouse_x = e.x()
             self.current_mouse_y = e.y()
+            print(self.current_mouse_y,self.current_mouse_x)
             left = self.init_map_x
             right = self.init_map_x + self.map_width
             top = self.init_map_y

@@ -34,7 +34,8 @@ class Widget_SimSet(QWidget):
 
         self.radioButton_handmake.hide()
         self.pushButton_openinveditor.hide()
-
+        self.sim_data = [self.is_randomOrder, int(self.lineEdit_initorder.text()), int(self.lineEdit_orderrate.text()),
+                         self.robot_cap, self.robot_number]
 
     def close_n_save(self):
         if self.is_randomOrder:
@@ -59,6 +60,7 @@ class Widget_SimSet(QWidget):
         robotcap = self.lineEdit_robotcap.text()
         robotnumber = self.lineEdit_robotnumber.text()
 
+
         if not self.is_goodAnswer(robotcap):
             msgBox = QMessageBox()
             msgBox.setWindowTitle("경고")
@@ -72,7 +74,10 @@ class Widget_SimSet(QWidget):
             msgBox.setText("로봇의 수가 이상합니다.")
             msgBox.exec_()
             return False
+        robotcap = int(robotcap)
+        robotnumber =int(robotnumber)
         self.is_safe_close = True
+        self.sim_data = [self.is_randomOrder, int(self.lineEdit_initorder.text()), int(self.lineEdit_orderrate.text()), robotcap,robotnumber]
         self.close()
 
 
@@ -145,7 +150,6 @@ class Widget_SimSet(QWidget):
                 msgBox.setText("초기 주문량 값이 이상합니다.")
                 msgBox.exec_()
                 return False
-            print("?")
             if self.is_goodAnswer(order_rate):
                 data['order_rate'] = int(order_rate)
             else:
