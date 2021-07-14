@@ -2,6 +2,7 @@ import time
 import random
 import math
 from TSP_solve import *
+import os
 class warehouse_Robot:
     def __init__(self,capacity,packing_station,packing_station_ind,current_point,property=None):
         self.capcity = capacity
@@ -110,7 +111,7 @@ class warehouse_Robot:
 def warehouse_tsp_solver(sim_data,order_data):
     while not sim_data["is_start"]:
         pass
-
+    # print("order handler",os.getpid())
     solver = sim_data["tsp_solver"]
 
     ui_info =sim_data['ui_info']
@@ -240,7 +241,7 @@ def warehouse_tsp_solver(sim_data,order_data):
                 '''
                 경로생성 
                 '''
-                solved_order = solve_tsp(order,robot.packing_station_ind,solver,distance_cost,shelf_size)
+                solved_order = solve_tsp(order,robot.packing_station_ind,sim_data["tsp_solver"],distance_cost,shelf_size)
 
                 '''
                 로봇에게 업무할당간에 전처리
@@ -255,15 +256,23 @@ def warehouse_tsp_solver(sim_data,order_data):
             if robot.is_work:
                 robot.move()
         robot_cordinates = []
+
         for robot in robots:
             robot_cordinates.append(robot.current_point)
         sim_data["robot_cordinates"] = robot_cordinates
         goal_cordinates = []
+
         for robot in robots:
             goal_cordinates.append(robot.goal_point)
         sim_data["goal_cordinates"] = goal_cordinates
 
-        time.sleep(0.3)
+        shelf_node = []
+        for robot in robots:
+            shelf_node.append(robot.picking_point)
+        sim_data["shelf_node"] = shelf_node
+
+        sim_data["number_order"] = len(order_data["orders"])
+        time.sleep(0.1)
 
 
 def warehouse_order_maker(order_info, no_use):
@@ -271,7 +280,7 @@ def warehouse_order_maker(order_info, no_use):
 
     while not order_info["is_start"]:
         pass
-
+    # print("order maker",os.getpid())
     initOrder = order_info['sim_data'][1]
     order_rate = order_info['sim_data'][2]
 
@@ -289,4 +298,4 @@ def warehouse_order_maker(order_info, no_use):
         time.sleep(1)
         new_order = [random.choice(list(range(1,kind+1))) for i in range(order_rate)]
         order_info["orders"] = order_info["orders"] +new_order
-        print("remained order", len(order_info["orders"]))
+        # print("remained order", len(order_info["orders"]))

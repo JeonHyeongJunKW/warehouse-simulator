@@ -9,8 +9,14 @@ def solve_tsp(orders, packing_point, tsp_solve_way,distance_cost,shelf_size):
     distance_cost : 2차원 리스트 형, 패킹지점과 선반들 사이의 cost가 정해져있음
     '''
 
-    if tsp_solve_way == "ACO":
-        print("not maked")
+    if tsp_solve_way == "NO_TSP":
+        pass
+    elif tsp_solve_way == "GA":
+        pass
+    elif tsp_solve_way == "PSO":
+        pass
+    elif tsp_solve_way == "ACO":
+        pass
 
 
     ##풀린 경로를 반환하는 부분 건드리질 말것.

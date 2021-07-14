@@ -13,14 +13,17 @@ class Simulator(QLabel):
         self.timer = QTimer(self)
         self.timer.start(300)
         self.timer.timeout.connect(self.update)
+        self.is_view_shelf = False
 
-    def setData(self,sim_data, map_data):
+    def setData(self,sim_data, map_data,ui_info):
         self.sim_data = sim_data
         self.map_data = map_data
+        self.shelfs =map_data['shelf_point']
         self.map_width = map_data['map_size'][0]
         self.map_height = map_data['map_size'][1]
         self.map_resolution = map_data['map_resolution'][0]
         self.map_resolution_2 = map_data['map_resolution'][1]
+        self.ui_info = ui_info
 
     def setMapImage(self,image_name):
         self.qPixmapVar = QPixmap("./sim/"+image_name)
@@ -36,11 +39,45 @@ class Simulator(QLabel):
             for i,[y, x] in enumerate(self.sim_data["robot_cordinates"]):
                 qp.setBrush(QColor(0, 0, 0))
                 qp.drawRect(self.map_width/self.map_resolution *x, self.map_height/self.map_resolution_2 *y, self.map_width/self.map_resolution, self.map_height/self.map_resolution_2)
+            if self.is_view_shelf:
+
+                for i, ind_list in enumerate(self.sim_data["shelf_node"]):
+                    qp.setBrush(QColor(255, 187, 0))
+                    # x =self.shelfs[ind-1][0]- self.ui_info[0]
+                    # y =self.shelfs[ind-1][1]- self.ui_info[1]
+                    res_width = self.map_width / self.map_resolution
+                    res_heigth = self.map_height / self.map_resolution_2
+                    for ind in ind_list[1:-1]:
+
+                        point = self.shelfs[ind-1]
+                        if point[2] == 0 or point[2] == 180:
+                            lefttop = [point[0] - int(point[3] / 2),
+                                       point[1] - int(point[4] / 2)]
+                            rightbottom = [point[0] + int(point[3] / 2),
+                                           point[1] + int(point[4] / 2)]
+                        else:
+                            lefttop = [point[0] - int(point[4] / 2),
+                                       point[1] - int(point[3] / 2)]
+                            rightbottom = [point[0] + int(point[4] / 2),
+                                           point[1] + int(point[3] / 2)]
+                        init_x = self.ui_info[0]
+                        init_y = self.ui_info[1]
+
+                        small_x_index = math.floor((lefttop[0] - init_x) / res_width)  # 맨왼쪽 포함
+                        big_x_index = math.ceil((rightbottom[0] - init_x) / res_width)
+                        small_y_index = math.floor((lefttop[1] - init_y) / res_heigth)
+                        big_y_index = math.ceil((rightbottom[1] - init_y) / res_heigth)
+                        for i in range(small_y_index, big_y_index):
+                            for j in range(small_x_index, big_x_index):
+                                lefttop_x = res_width * j
+                                lefttop_y = res_heigth * i
+                                qp.drawRect(lefttop_x, lefttop_y, res_width, res_heigth)
+
             for i, [y, x] in enumerate(self.sim_data["goal_cordinates"]):
                 qp.setBrush(QColor(255, 0, 0))
+
                 qp.drawRect(self.map_width / self.map_resolution * x, self.map_height / self.map_resolution_2 * y,
                             self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
-
 
 
         qp.setBrush(QColor(0, 100, 0))
@@ -53,6 +90,7 @@ class Simulator(QLabel):
 class Widget_drawMap(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs)
+
         '''
         맵을 한번다시 그려서 저장하는 모듈 이제 쓸일없다.
         '''
@@ -79,6 +117,9 @@ class Widget_drawMap(QWidget):
         self.draw(qp)
         qp.end()
         self.image.save("./sim/"+map_image_name)
+
+
+
 
 
     def draw(self, qp):
@@ -189,7 +230,15 @@ class Widget_Simulator(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         uic.loadUi("Simulator.ui",self)
-
+        self.is_view_shelf = False
+        self.checkBox_viewAllShelf.stateChanged.connect(self.viewShelf)
+        self.timer = QTimer(self)
+        self.tsp_mode = "NO_TSP"
+        self.timer.timeout.connect(self.update_orders)
+        self.radioButton_ACO.clicked.connect(self.set_aco)
+        self.radioButton_GA.clicked.connect(self.set_ga)
+        self.radioButton_PSO.clicked.connect(self.set_pso)
+        self.radioButton_notsp.clicked.connect(self.set_notsp)
         '''
         해야할 것.
         1. 맵에 대한 visualization을 해야함.(성공)
@@ -199,10 +248,30 @@ class Widget_Simulator(QWidget):
         - 문제점 : 과연 위젯 위에 draw가 될까? 
         2. 
         '''
+    def set_aco(self):
+        self.tsp_mode ="ACO"
+        self.sim_data["tsp_solver"] =self.tsp_mode
+    def set_ga(self):
+        self.tsp_mode ="GA"
+        self.sim_data["tsp_solver"] = self.tsp_mode
+    def set_pso(self):
+        self.tsp_mode ="PSO"
+        self.sim_data["tsp_solver"] = self.tsp_mode
+    def set_notsp(self):
+        self.tsp_mode ="NO_TSP"
+        self.sim_data["tsp_solver"] =self.tsp_mode
+
     def set_data(self, order_data,sim_data):
         self.order_data = order_data
         self.sim_data = sim_data
 
+    def viewShelf(self):
+        if self.is_view_shelf:
+            self.is_view_shelf = False
+            self.image.is_view_shelf = False
+        else:
+            self.is_view_shelf = True
+            self.image.is_view_shelf = True
 
     def setMapInfo(self,map_data,ui_info):
         self.map_data = map_data
@@ -227,6 +296,10 @@ class Widget_Simulator(QWidget):
 
         #맵을 한번 그려서 저장합니다.
         self.map_drawer.draw_and_save(self.map_data,self.map_name,ui_info)
+        self.ui_info =ui_info
+
+    def update_orders(self):
+        self.lineEdit_lastOrder.setText(str(self.sim_data["number_order"]))
 
 
 
@@ -239,15 +312,18 @@ class Widget_Simulator(QWidget):
         self.robot_number = sim_data[4]
     def set_shared_data(self,sim_data):
         self.sim_shared_data = sim_data
+
     def start_setting(self):
         self.image = Simulator(self)
         self.image.setMapImage(self.map_name)#self.map_name의 이미지를 다운로드해서 그립니다.
         self.image.resize(self.map_width,self.map_height)#그려지는 이미지의 사이즈를 원래 맵의 형태로 합니다.
-        self.image.setData(self.sim_shared_data,self.map_data)
+        self.image.setData(self.sim_shared_data,self.map_data,self.ui_info)
         # 전체 시물레이션의 위젯 크기를 조정합니다.
-        self.setFixedWidth(self.map_width+200)
+        self.setFixedWidth(self.map_width+10+self.groupBox_viewer.width()+10)
+        self.groupBox_viewer.move(self.map_width+10,20)
         self.setFixedHeight(self.map_height)
 
         self.image.show()
         self.image.update()#맵을 그립니다.
+        self.timer.start(300)
 

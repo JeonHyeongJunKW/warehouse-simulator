@@ -52,8 +52,8 @@ class WindowClass(QMainWindow, form_class):
         self.sim_data = sim_data
 
     def closeEvent(self, QCloseEvent):
-        self.order_maker.terminate()
-        self.warehouse_tsp_solver.terminate()
+        self.order_maker.kill()
+        self.warehouse_tsp_solver.kill()
 
     def openSimulator(self):
         if self.simulator :
@@ -139,11 +139,13 @@ if __name__ == "__main__":
     #시물레이션을 본격적으로 돌리는 프로세스 입니다.
     sim_data = Manager().dict()
     order_data = Manager().dict()
-    sim_data["tsp_solver"] = "ACO"
+    sim_data["tsp_solver"] = "NO_TSP"
     order_data["is_start"] = False
     sim_data["is_start"] = False
     sim_data["robot_cordinates"] =[]
     sim_data["goal_cordinates"] = []
+    sim_data["shelf_node"] = []
+    sim_data["number_order"] =0
     order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
     order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
     order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
