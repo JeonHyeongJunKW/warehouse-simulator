@@ -1,5 +1,22 @@
 # warehouse-simulator
 물류로봇 시물레이션과 Dynamic TSP를 구현하기 위해서 개발되었습니다.
+
+### 업데이트 현황 
+0.1 : 기본 시물레이션 및 시각화 코드 
+
+추가 계획 : 
+- 선반의 경로 대신에 선반에 할당된 노드들 표시하기 
+- 남아있는 주문 GUI에 넣기
+- tsp 알고리즘 추가 및 고를 수 있게 해두기
+ - ACO
+ - 유전알고리즘
+ - PSO
+- 중간에 노드 추가 기능 넣어두기
+- 각 알고리즘을 동시에 돌려서 비교할 수 있게 하기 
+- 로봇간에 경로회피 알고리즘 추가하기
+- 선반간 이동경로를 A*star로 찾기
+
+
 ### 시물레이션 목적
 - 주문을 할당 받은 멀티 로봇의 최적 동선 스케줄링
 - 기존 방식(order grouping과 robot sceduling)에서 Task allocation<sup>[1](#footnote_1)</sup>과 Task sequencing<sup>[2](#footnote_2)</sup> 구조로 개선 
