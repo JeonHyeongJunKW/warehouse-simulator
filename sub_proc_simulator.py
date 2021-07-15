@@ -17,6 +17,8 @@ class warehouse_Robot:
         self.prev_point = self.home_packing_station#로봇의 현재 위치 이전의 좌표
         self.goal_point = []#현재 로봇이 향하는 목표점
         self.occupy_map =None
+        self.route =[]
+        self.route_maxind =6
 
     def move(self):
         if self.is_work:
@@ -57,10 +59,16 @@ class warehouse_Robot:
                         self.is_work =False
             else :
                 print("error occur : blocked robot")
-
-
-
-
+            #로봇의 경로를 저장해둡니다. 시각적인 표시용
+            if len(self.route)<= self.route_maxind:
+                route_x = self.current_point[1]
+                route_y = self.current_point[0]
+                self.route.append([route_y,route_x])
+            else :
+                self.route.pop(0)
+                route_x = self.current_point[1]
+                route_y = self.current_point[0]
+                self.route.append([route_y, route_x])
 
 
     def chanage_goal(self):#패킹지점인지 확인한다.
@@ -251,28 +259,39 @@ def warehouse_tsp_solver(sim_data,order_data):
                     part_shelf_grid.append(shelf_grid_list[shelf_grid-1])
                 robot.assign_work(solved_order,part_shelf_grid,occupy_map)
 
-
+        #로봇을 이동시킵니다.
         for robot in robots:
             if robot.is_work:
                 robot.move()
-        robot_cordinates = []
 
+
+        #로봇의 위치를 공유변수에 저장합니다.
+        robot_cordinates = []
         for robot in robots:
             robot_cordinates.append(robot.current_point)
         sim_data["robot_cordinates"] = robot_cordinates
         goal_cordinates = []
 
+        #로봇의 현재 목표위치(선반의 일부)를 공유변수에 저장합니다.
         for robot in robots:
             goal_cordinates.append(robot.goal_point)
         sim_data["goal_cordinates"] = goal_cordinates
 
+        #로봇이 가야하는 경로를 공유변수에 저장합니다.
         shelf_node = []
         for robot in robots:
             shelf_node.append(robot.picking_point)
         sim_data["shelf_node"] = shelf_node
 
+        #현재 남은 주문량을 공유변수에 저장합니다.
         sim_data["number_order"] = len(order_data["orders"])
-        time.sleep(0.1)
+
+        #로봇의 10번의 경로를 저장합니다.
+        robot_routes = []
+        for robot in robots:
+            robot_routes.append(robot.route)
+        sim_data["robot_routes"] = robot_routes
+        time.sleep(0.3)
 
 
 def warehouse_order_maker(order_info, no_use):

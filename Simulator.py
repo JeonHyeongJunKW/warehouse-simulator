@@ -14,6 +14,7 @@ class Simulator(QLabel):
         self.timer.start(300)
         self.timer.timeout.connect(self.update)
         self.is_view_shelf = False
+        self.is_view_route = False
 
     def setData(self,sim_data, map_data,ui_info):
         self.sim_data = sim_data
@@ -24,6 +25,8 @@ class Simulator(QLabel):
         self.map_resolution = map_data['map_resolution'][0]
         self.map_resolution_2 = map_data['map_resolution'][1]
         self.ui_info = ui_info
+        self.res_width = self.map_width / self.map_resolution
+        self.res_heigth = self.map_height / self.map_resolution_2
 
     def setMapImage(self,image_name):
         self.qPixmapVar = QPixmap("./sim/"+image_name)
@@ -40,13 +43,13 @@ class Simulator(QLabel):
                 qp.setBrush(QColor(0, 0, 0))
                 qp.drawRect(self.map_width/self.map_resolution *x, self.map_height/self.map_resolution_2 *y, self.map_width/self.map_resolution, self.map_height/self.map_resolution_2)
             if self.is_view_shelf:
-
+                init_x = self.ui_info[0]
+                init_y = self.ui_info[1]
                 for i, ind_list in enumerate(self.sim_data["shelf_node"]):
                     qp.setBrush(QColor(255, 187, 0))
                     # x =self.shelfs[ind-1][0]- self.ui_info[0]
                     # y =self.shelfs[ind-1][1]- self.ui_info[1]
-                    res_width = self.map_width / self.map_resolution
-                    res_heigth = self.map_height / self.map_resolution_2
+
                     for ind in ind_list[1:-1]:
 
                         point = self.shelfs[ind-1]
@@ -60,28 +63,40 @@ class Simulator(QLabel):
                                        point[1] - int(point[3] / 2)]
                             rightbottom = [point[0] + int(point[4] / 2),
                                            point[1] + int(point[3] / 2)]
-                        init_x = self.ui_info[0]
-                        init_y = self.ui_info[1]
 
-                        small_x_index = math.floor((lefttop[0] - init_x) / res_width)  # 맨왼쪽 포함
-                        big_x_index = math.ceil((rightbottom[0] - init_x) / res_width)
-                        small_y_index = math.floor((lefttop[1] - init_y) / res_heigth)
-                        big_y_index = math.ceil((rightbottom[1] - init_y) / res_heigth)
+
+                        small_x_index = math.floor((lefttop[0] - init_x) / self.res_width)  # 맨왼쪽 포함
+                        big_x_index = math.ceil((rightbottom[0] - init_x) / self.res_width)
+                        small_y_index = math.floor((lefttop[1] - init_y) / self.res_heigth)
+                        big_y_index = math.ceil((rightbottom[1] - init_y) / self.res_heigth)
                         for i in range(small_y_index, big_y_index):
                             for j in range(small_x_index, big_x_index):
-                                lefttop_x = res_width * j
-                                lefttop_y = res_heigth * i
-                                qp.drawRect(lefttop_x, lefttop_y, res_width, res_heigth)
+                                lefttop_x = self.res_width * j
+                                lefttop_y = self.res_heigth * i
+                                qp.drawRect(lefttop_x, lefttop_y, self.res_width, self.res_heigth)
+            if self.is_view_route:
+                init_x = self.ui_info[0]
+                init_y = self.ui_info[1]
+                qp.setPen(QPen(QColor(95, 0, 255), 2))
+                for points in self.sim_data["robot_routes"]:
+                    for i in range(len(points)-1):
+                        start =points[i]
+                        end = points[i+1]
+                        qp.drawLine(self.map_width / self.map_resolution * start[1]+self.res_width/2,
+                                    self.map_height / self.map_resolution_2 * start[0]+self.res_heigth/2,
+                                    self.map_width / self.map_resolution * end[1] + self.res_width / 2,
+                                    self.map_height / self.map_resolution_2 * end[0] + self.res_heigth / 2)
 
+            qp.setPen(QPen(QColor(0, 0, 0), 2))
+            #로봇의 현재 목표점을 그립니다.
             for i, [y, x] in enumerate(self.sim_data["goal_cordinates"]):
                 qp.setBrush(QColor(255, 0, 0))
 
-                qp.drawRect(self.map_width / self.map_resolution * x, self.map_height / self.map_resolution_2 * y,
-                            self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
+                qp.drawRect(self.map_width / self.map_resolution * x,self.map_height / self.map_resolution_2 * y,self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
 
 
-        qp.setBrush(QColor(0, 100, 0))
-        qp.setPen(QPen(QColor(0, 0, 0), 2))
+        # qp.setBrush(QColor(0, 100, 0))
+
         qp.end()
 
 
@@ -231,6 +246,7 @@ class Widget_Simulator(QWidget):
         super().__init__(*args, **kwargs)
         uic.loadUi("Simulator.ui",self)
         self.is_view_shelf = False
+        self.is_view_route =False
         self.checkBox_viewAllShelf.stateChanged.connect(self.viewShelf)
         self.timer = QTimer(self)
         self.tsp_mode = "NO_TSP"
@@ -239,6 +255,7 @@ class Widget_Simulator(QWidget):
         self.radioButton_GA.clicked.connect(self.set_ga)
         self.radioButton_PSO.clicked.connect(self.set_pso)
         self.radioButton_notsp.clicked.connect(self.set_notsp)
+        self.checkBox_viewRoute.stateChanged.connect(self.viewRoute)
         '''
         해야할 것.
         1. 맵에 대한 visualization을 해야함.(성공)
@@ -248,6 +265,13 @@ class Widget_Simulator(QWidget):
         - 문제점 : 과연 위젯 위에 draw가 될까? 
         2. 
         '''
+    def viewRoute(self):
+        if self.is_view_route:
+            self.is_view_route = False
+            self.image.is_view_route = False
+        else:
+            self.is_view_route = True
+            self.image.is_view_route = True
     def set_aco(self):
         self.tsp_mode ="ACO"
         self.sim_data["tsp_solver"] =self.tsp_mode

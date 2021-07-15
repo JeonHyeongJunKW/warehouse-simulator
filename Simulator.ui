@@ -167,7 +167,7 @@
    </widget>
    <widget class="QCheckBox" name="checkBox_viewRoute">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
