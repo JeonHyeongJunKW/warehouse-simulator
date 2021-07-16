@@ -19,11 +19,12 @@ class warehouse_Robot:
         self.occupy_map =None
         self.route =[]
         self.route_maxind =6
+        self.full_route =[]
 
     def move(self):
         if self.is_work:
             #알고리즘 적용
-            move_control = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]]
+            move_control = [[0,1],[1,0],[0,-1],[-1,0]]
             blocked_flag = True
             find_goal = False
             best_cand = -1
@@ -49,6 +50,8 @@ class warehouse_Robot:
                     break
 
             self.prev_point = [self.current_point[0],self.current_point[1]]
+
+
             if not blocked_flag :
 
                 if not find_goal :#아직 도착을 못했다면,
@@ -69,6 +72,9 @@ class warehouse_Robot:
                 route_x = self.current_point[1]
                 route_y = self.current_point[0]
                 self.route.append([route_y, route_x])
+            route_x = self.current_point[1]
+            route_y = self.current_point[0]
+            self.full_route.append([route_y, route_x])
 
 
     def chanage_goal(self):#패킹지점인지 확인한다.
@@ -92,7 +98,8 @@ class warehouse_Robot:
             return False
         else :#last_ind가 패킹 선반 다돌고, 마지막 패킹지점으로 왔다면
             self.last_ind =0
-
+            self.route = []
+            self.full_route = []
             return True
 
     def assign_work(self, picking_point, shelf_grid_list,occupy_map):
@@ -110,10 +117,52 @@ class warehouse_Robot:
                 min_dis = dis
         self.goal_point = goal_candidate[min_ind]  # 로봇과 가까운 지점.
         self.occupy_map = occupy_map
+        self.full_route = []
 
 
 
-
+def getColorSet(color_num):
+    color_list = []
+    color_base =0
+    for i in range(color_num):
+        if color_base == 0:
+            r = random.randrange(200,255)
+            g = random.randrange(0, 100)
+            b = random.randrange(0, 100)
+        elif color_base == 1:
+            r = random.randrange(0, 100)
+            g = random.randrange(200, 255)
+            b = random.randrange(0, 100)
+        elif color_base ==2:
+            r = random.randrange(0, 100)
+            g = random.randrange(0, 100)
+            b = random.randrange(200, 255)
+        color_list.append([r,g,b])
+        color_base =(color_base+1)%3
+    return color_list
+def getbrightColorSet(color_num):
+    color_list = []
+    color_base =0
+    for i in range(color_num):
+        if color_base == 0:
+            r = random.randrange(254,255)
+            g = random.randrange(240, 255)
+            b = random.randrange(180, 230)
+        elif color_base == 1:
+            r = random.randrange(180, 230)
+            g = random.randrange(254, 255)
+            b = random.randrange(240, 255)
+        elif color_base ==2:
+            r = random.randrange(240, 255)
+            g = random.randrange(180, 230)
+            b = random.randrange(254, 255)
+        elif color_base ==3:
+            r = random.randrange(254, 255)
+            g = random.randrange(180, 230)
+            b = random.randrange(240, 255)
+        color_list.append([r,g,b])
+        color_base =(color_base+1)%4
+    return color_list
 
 
 def warehouse_tsp_solver(sim_data,order_data):
@@ -180,14 +229,19 @@ def warehouse_tsp_solver(sim_data,order_data):
                 j_pos_y = saved_shelf_point[j][1] - init_map_y
                 j_pos = [j_pos_x, j_pos_y]
             distance_cost[i][j] = (i_pos[0]-j_pos[0])*(i_pos[0]-j_pos[0]) +(i_pos[1]-j_pos[1])*(i_pos[1]-j_pos[1])
-
+    #패킹지점별 고유 색깔을 지정받는다.
+    sim_data["packing_color"] = getColorSet(len(saved_pk_point))
+    sim_data["route_color"] = getbrightColorSet(len(saved_pk_point))
+    sim_data["packing_point"] = map_data['pack_point']
     #로봇의 위치를 세팅한다.
     '''
     패킹지점 별로 할당받아야함 
     '''
     robots = []
+    robot_ind = []
     for i in range(robot_number):
         packing_ind = math.floor(i/robot_number*len(saved_pk_point))
+        robot_ind.append(packing_ind)
         robot_pos_x = math.floor((saved_pk_point[packing_ind][0] - init_map_x)/res_width)
         robot_pos_y = math.floor((saved_pk_point[packing_ind][1] - init_map_y)/res_height)
         packing_point = [robot_pos_y, robot_pos_x]#로봇의 초기 위치는 y,x를 반대로 해서 넣습니다.
@@ -195,7 +249,7 @@ def warehouse_tsp_solver(sim_data,order_data):
         robot = warehouse_Robot(capacity=robot_cap,packing_station=packing_point,packing_station_ind=packing_ind+20001,current_point=current_pose)
 
         robots.append(robot)
-
+    sim_data["packing_ind"] = robot_ind
     #선반이 차지하는 격자맵을 얻습니다.
     shelf_grid_list =[]
     for ind, point in enumerate(saved_shelf_point):
@@ -260,38 +314,33 @@ def warehouse_tsp_solver(sim_data,order_data):
                 robot.assign_work(solved_order,part_shelf_grid,occupy_map)
 
         #로봇을 이동시킵니다.
+        # 로봇의 위치를 공유변수에 저장합니다.
+        robot_cordinates = []
+        # 로봇의 현재 목표위치(선반의 일부)를 공유변수에 저장합니다.
+        goal_cordinates = []
+        # 로봇이 가야하는 경로를 공유변수에 저장합니다.
+        shelf_node = []
+        # 로봇의 6번의 경로를 저장합니다.
+        robot_routes = []
+        # 로봇의 전체 경로를 저장합니다.
+        robot_full_routes = []
         for robot in robots:
             if robot.is_work:
                 robot.move()
-
-
-        #로봇의 위치를 공유변수에 저장합니다.
-        robot_cordinates = []
-        for robot in robots:
             robot_cordinates.append(robot.current_point)
-        sim_data["robot_cordinates"] = robot_cordinates
-        goal_cordinates = []
-
-        #로봇의 현재 목표위치(선반의 일부)를 공유변수에 저장합니다.
-        for robot in robots:
             goal_cordinates.append(robot.goal_point)
-        sim_data["goal_cordinates"] = goal_cordinates
-
-        #로봇이 가야하는 경로를 공유변수에 저장합니다.
-        shelf_node = []
-        for robot in robots:
             shelf_node.append(robot.picking_point)
+            robot_routes.append(robot.route)
+            robot_full_routes.append(robot.full_route)
+        sim_data["robot_cordinates"] = robot_cordinates
+        sim_data["goal_cordinates"] = goal_cordinates
         sim_data["shelf_node"] = shelf_node
-
+        sim_data["robot_routes"] = robot_routes
+        sim_data["robot_full_routes"] = robot_full_routes
         #현재 남은 주문량을 공유변수에 저장합니다.
         sim_data["number_order"] = len(order_data["orders"])
 
-        #로봇의 10번의 경로를 저장합니다.
-        robot_routes = []
-        for robot in robots:
-            robot_routes.append(robot.route)
-        sim_data["robot_routes"] = robot_routes
-        time.sleep(0.3)
+        time.sleep(0.1)
 
 
 def warehouse_order_maker(order_info, no_use):

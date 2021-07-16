@@ -185,17 +185,22 @@
      </font>
     </property>
     <property name="text">
-     <string>경로보기 </string>
+     <string>최근 경로보기 </string>
     </property>
    </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>190</y>
+      <x>30</x>
+      <y>210</y>
       <width>81</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
     </property>
     <property name="text">
      <string>남은 주문량</string>
@@ -211,7 +216,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>220</y>
+      <y>240</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -235,7 +240,7 @@
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>220</y>
+      <y>240</y>
       <width>21</width>
       <height>31</height>
      </rect>
@@ -247,6 +252,29 @@
     </property>
     <property name="text">
      <string>개</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_viewFullRoute">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>190</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>전체 경로보기</string>
     </property>
    </widget>
   </widget>

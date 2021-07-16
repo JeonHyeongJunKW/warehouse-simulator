@@ -100,8 +100,8 @@ class Widget_Warehouse(QWidget):
         super().__init__(*args, **kwargs)
         uic.loadUi("w_map_editer.ui",self)
         self.setWindowTitle("맵 생성도구")
-        self.setFixedWidth(1193)
-        self.setFixedHeight(614)
+        self.setFixedWidth(1618)
+        self.setFixedHeight(856)
         self.map_height = 400
         self.map_width = 500
         self.map_resolution = 10
@@ -109,6 +109,10 @@ class Widget_Warehouse(QWidget):
         self.setupSignal()
         self.preview_map.hide()
         self.preview_shelf.hide()
+        self.max_map_width = 1100
+        self.max_map_height = 750
+        self.max_map_resolution = 200
+        self.max_map_resolution_2 = 200
 
 
 
@@ -158,7 +162,7 @@ class Widget_Warehouse(QWidget):
     def draw(self, qp):
         init_x = self.init_map_x
         init_y = self.init_map_y
-        qp.setPen(QPen(Qt.black, 2))
+        qp.setPen(QPen(QColor(189,189,189), 2))
         qp.drawRect(init_x, init_y, self.map_width, self.map_height)
         res_width = self.map_width/self.map_resolution
         res_heigth = self.map_height/self.map_resolution_2
@@ -188,7 +192,7 @@ class Widget_Warehouse(QWidget):
             qp.drawRect(init_x-int(self.shelf_width/2),init_y-int(self.shelf_height/2),self.shelf_width,self.shelf_height)
             #선반이 oneside인지
             item_width = self.shelf_width/self.shelf_maxitem
-            qp.setPen(QPen(QColor(0, 0, 0), 2))
+            qp.setPen(QPen(QColor(189,189,189), 2))
             #선반위에 선을 그립니다.(각 아이템이 들어갈 칸입니다.
             for i in range(self.shelf_maxitem+1):
                 start_x =init_x-int(self.shelf_width/2)+item_width*i
@@ -221,14 +225,14 @@ class Widget_Warehouse(QWidget):
             if ind+1 ==self.current_clicked_curser_ind:
                 if self.mode =="edit Map":
                     qp.setBrush(QColor(243, 97, 220))
-                    qp.setPen(QPen(QColor(0, 0, 0), 2))
+                    qp.setPen(QPen(QColor(189,189,189), 2))
             elif ind+1 ==self.current_upper_curser_ind:
                 if self.mode =="edit Map":
                     qp.setBrush(QColor(100, 100, 0))
-                    qp.setPen(QPen(QColor(0, 0, 0), 2))
+                    qp.setPen(QPen(QColor(189,189,189), 2))
             else:
                 qp.setBrush(QColor(0, 100, 0))
-                qp.setPen(QPen(QColor(0, 0, 0), 2))
+                qp.setPen(QPen(QColor(189,189,189), 2))
             init_x = self.init_map_x
             init_y = self.init_map_y
 
@@ -259,18 +263,17 @@ class Widget_Warehouse(QWidget):
                     qp.setBrush(QColor(100, 100, 0))
                     qp.setPen(QPen(QColor(100, 0, 0), 3))
             else:
-                qp.setBrush(QColor(0, 100, 0))
-                qp.setPen(QPen(QColor(0, 0, 0), 2))
+                qp.setBrush(QColor(0, 0, 0))
+                qp.setPen(QPen(QColor(189,189,189), 2))
             small_x_index = math.floor((block_point[0] - init_x) / res_width)  # 맨왼쪽 포함
             big_x_index = math.ceil((block_point[0] - init_x) / res_width)
             small_y_index = math.floor((block_point[1]- init_y) / res_heigth)
             big_y_index = math.ceil((block_point[1] - init_y) / res_heigth)
             small_x_index = init_x + res_width * small_x_index
-            big_x_index = init_x + res_width * big_x_index
+            # big_x_index = init_x + res_width * big_x_index
             small_y_index = init_y + res_heigth * small_y_index
-            big_y_index = init_y + res_heigth * big_y_index
-            qp.drawLine(small_x_index, small_y_index, big_x_index, big_y_index)
-            qp.drawLine(small_x_index, big_y_index, big_x_index, small_y_index)
+            # big_y_index = init_y + res_heigth * big_y_index
+            qp.drawRect(small_x_index, small_y_index, res_width, res_heigth)
 
         # 시작지점그리기
         for ind, block_point in enumerate(self.saved_sp_point):
@@ -283,14 +286,14 @@ class Widget_Warehouse(QWidget):
             if (ind + 1+10000) == self.current_clicked_curser_ind_block:
                 if self.mode == "delete sp":
                     qp.setBrush(QColor(0, 255, 0))
-                    qp.setPen(QPen(QColor(0, 0, 0), 3))
+                    qp.setPen(QPen(QColor(189,189,189), 3))
             elif (ind + 1+10000) == self.current_upper_curser_ind_block:
                 if self.mode == "delete sp":
                     qp.setBrush(QColor(100, 100, 0))
-                    qp.setPen(QPen(QColor(0, 0, 0), 2))
+                    qp.setPen(QPen(QColor(189,189,189), 2))
             else:
                 qp.setBrush(QColor(255, 0, 127))
-                qp.setPen(QPen(QColor(0, 0, 0), 2))
+                qp.setPen(QPen(QColor(189,189,189), 2))
             small_x_index = math.floor((block_point[0] - init_x) / res_width)  # 맨왼쪽 포함
             big_x_index = math.ceil((block_point[0] - init_x) / res_width)
             small_y_index = math.floor((block_point[1] - init_y) / res_heigth)
@@ -395,15 +398,14 @@ class Widget_Warehouse(QWidget):
                 qp.setBrush(QColor(100, 0, 0))
                 qp.setPen(QPen(QColor(0, 0, 0), 2))
                 small_x_index = math.floor((self.current_mouse_x - init_x) / res_width)  # 맨왼쪽 포함
-                big_x_index = math.ceil((self.current_mouse_x - init_x) / res_width)
+                # big_x_index = math.ceil((self.current_mouse_x - init_x) / res_width)
                 small_y_index = math.floor((self.current_mouse_y - init_y) / res_heigth)
-                big_y_index = math.ceil((self.current_mouse_y - init_y) / res_heigth)
+                # big_y_index = math.ceil((self.current_mouse_y - init_y) / res_heigth)
                 small_x_index = init_x + res_width*small_x_index
-                big_x_index = init_x + res_width * big_x_index
+                # big_x_index = init_x + res_width * big_x_index
                 small_y_index = init_y + res_heigth * small_y_index
-                big_y_index = init_y + res_heigth * big_y_index
-                qp.drawLine(small_x_index,small_y_index,big_x_index,big_y_index)
-                qp.drawLine(small_x_index, big_y_index, big_x_index, small_y_index)
+                # big_y_index = init_y + res_heigth * big_y_index
+                qp.drawRect(small_x_index,small_y_index,res_width,res_heigth)
 
         #선반미리보기
         if self.mode == "Set Shelf":
@@ -1277,14 +1279,14 @@ class Widget_Warehouse(QWidget):
     def change_resolution_edit(self):
         rValue = self.edit_resolution.text()
         if rValue.isdigit():
-            if 10 < int(rValue) and int(rValue) <= 100:
+            if 10 < int(rValue) and int(rValue) <= self.max_map_resolution:
                 self.slider_resolution.setValue(int(rValue))
                 self.map_resolution = int(rValue)
                 self.occupancy_change()
             else:
                 msgBox = QMessageBox()
                 msgBox.setWindowTitle("경고")
-                msgBox.setText("10~100사이의 숫자값을 입력해주세요.")
+                msgBox.setText("10~"+str(self.max_map_resolution)+"사이의 숫자값을 입력해주세요.")
                 msgBox.exec_()
         else:
             msgBox = QMessageBox()
@@ -1296,14 +1298,14 @@ class Widget_Warehouse(QWidget):
     def change_resolution_edit_2(self):
         rValue = self.edit_resolution_2.text()
         if rValue.isdigit():
-            if 10 < int(rValue) and int(rValue) <= 100:
+            if 10 < int(rValue) and int(rValue) <= self.max_map_resolution_2:
                 self.slider_resolution_2.setValue(int(rValue))
                 self.map_resolution_2 = int(rValue)
                 self.occupancy_change()
             else:
                 msgBox = QMessageBox()
                 msgBox.setWindowTitle("경고")
-                msgBox.setText("10~100사이의 숫자값을 입력해주세요.")
+                msgBox.setText("10~"+str(self.max_map_resolution_2)+"사이의 숫자값을 입력해주세요.")
                 msgBox.exec_()
         else:
             msgBox = QMessageBox()
@@ -1315,14 +1317,14 @@ class Widget_Warehouse(QWidget):
     def change_width_edit_size(self):
         wValue = self.edit_wSize.text()
         if wValue.isdigit():
-            if 0 < int(wValue) and int(wValue) <= 700:
+            if 0 < int(wValue) and int(wValue) <= self.max_map_width:
                 self.slider_wSize.setValue(int(wValue))
                 self.map_width = int(wValue)
                 self.occupancy_change()
             else:
                 msgBox = QMessageBox()
                 msgBox.setWindowTitle("경고")
-                msgBox.setText("0~800사이의 숫자값을 입력해주세요.")
+                msgBox.setText("0~"+str(self.max_map_width)+"사이의 숫자값을 입력해주세요.")
                 msgBox.exec_()
         else:
             msgBox = QMessageBox()
@@ -1334,14 +1336,14 @@ class Widget_Warehouse(QWidget):
     def change_height_edit_size(self):
         hValue = self.edit_hSize.text()
         if hValue.isdigit():
-            if 0 < int(hValue) and int(hValue) <= 500:
+            if 0 < int(hValue) and int(hValue) <= self.max_map_height:
                 self.slider_hSize.setValue(int(hValue))
                 self.map_height = int(hValue)
                 self.occupancy_change()
             else:
                 msgBox = QMessageBox()
                 msgBox.setWindowTitle("경고")
-                msgBox.setText("0~700사이의 숫자값을 입력해주세요.")
+                msgBox.setText("0~"+str(self.max_map_height)+"사이의 숫자값을 입력해주세요.")
                 msgBox.exec_()
         else:
             msgBox = QMessageBox()
