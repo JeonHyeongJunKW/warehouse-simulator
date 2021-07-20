@@ -3,6 +3,8 @@ import random
 import math
 from TSP_solve import *
 import os
+from Astar import *
+
 class warehouse_Robot:
     def __init__(self,capacity,packing_station,packing_station_ind,current_point,property=None):
         self.capcity = capacity
@@ -76,6 +78,55 @@ class warehouse_Robot:
             route_y = self.current_point[0]
             self.full_route.append([route_y, route_x])
 
+    def astar_move(self):
+        if self.is_work:
+            # 알고리즘 적용
+            blocked_flag = True
+            find_goal = False
+            move_control = [[0,1],[1,0],[0,-1],[-1,0]]
+            #print("AAAAAAA")
+            path = astar_path(self.occupy_map, self.current_point, self.goal_point)
+            #print("length = ", len(path))
+            if len(path) == 1:
+                next_pos = path[0]
+            else:
+                next_pos = path[1]
+
+            blocked_flag = False
+            #print(next_pos)
+            for control in move_control:
+                cand_y = control[0] + next_pos[0]
+                cand_x = control[1] + next_pos[1]
+                if self.occupy_map[cand_y][cand_x] == self.picking_point[self.last_ind+1]: # 주변에 사변이 해당로봇이 가야하는 지점과 목표 값이 같다면,
+                    print("check, check")
+                    find_goal = True
+                    blocked_flag = False
+
+            self.prev_point = [self.current_point[0], self.current_point[1]]
+
+            if not blocked_flag:
+                # 아직 도착을 못했다면,
+                self.current_point[0] = next_pos[0]
+                self.current_point[1] = next_pos[1]
+
+                if find_goal:                                                      # 골에 도착했다면 목표위치를 바꾼다.
+                    if self.chanage_goal():
+                        self.is_work = False
+            else:
+                print("error occur : blocked robot")
+
+            if len(self.route)<= self.route_maxind:
+                route_x = self.current_point[1]
+                route_y = self.current_point[0]
+                self.route.append([route_y,route_x])
+            else :
+                self.route.pop(0)
+                route_x = self.current_point[1]
+                route_y = self.current_point[0]
+                self.route.append([route_y, route_x])
+            route_x = self.current_point[1]
+            route_y = self.current_point[0]
+            self.full_route.append([route_y, route_x])
 
     def chanage_goal(self):#패킹지점인지 확인한다.
         last_index = len(self.picking_point)-1
@@ -326,7 +377,7 @@ def warehouse_tsp_solver(sim_data,order_data):
         robot_full_routes = []
         for robot in robots:
             if robot.is_work:
-                robot.move()
+                robot.astar_move()
             robot_cordinates.append(robot.current_point)
             goal_cordinates.append(robot.goal_point)
             shelf_node.append(robot.picking_point)
