@@ -86,7 +86,7 @@ class warehouse_Robot:
             # 알고리즘 적용
             blocked_flag = True
             find_goal = False
-            move_control = [[0,1],[1,0],[0,-1],[-1,0]]
+            move_control = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]]
             if len(self.astar_route) == 1:#이미 도착했다면(처음시작점과 도착점이 같아버림)
                 if self.chanage_goal_astar():#다음위치로 가버립니다.
                     self.is_work = False
