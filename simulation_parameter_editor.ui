@@ -327,7 +327,7 @@
       <rect>
        <x>20</x>
        <y>30</y>
-       <width>71</width>
+       <width>81</width>
        <height>21</height>
       </rect>
      </property>
@@ -337,13 +337,13 @@
       </font>
      </property>
      <property name="text">
-      <string>로봇 용량 : </string>
+      <string>로봇 order :</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="lineEdit_robotcap">
      <property name="geometry">
       <rect>
-       <x>90</x>
+       <x>110</x>
        <y>30</y>
        <width>31</width>
        <height>21</height>
@@ -408,8 +408,8 @@
     <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>123</x>
-       <y>31</y>
+       <x>150</x>
+       <y>30</y>
        <width>21</width>
        <height>20</height>
       </rect>

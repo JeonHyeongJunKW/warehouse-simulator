@@ -22,6 +22,9 @@ class warehouse_Robot:
         self.route =[]
         self.route_maxind =6
         self.full_route =[]
+        #Astar를 추가하였습니다.
+        self.astar_route = []
+        self.astar_ind = 0
 
     def move(self):
         if self.is_work:
@@ -84,37 +87,29 @@ class warehouse_Robot:
             blocked_flag = True
             find_goal = False
             move_control = [[0,1],[1,0],[0,-1],[-1,0]]
-            #print("AAAAAAA")
-            path = astar_path(self.occupy_map, self.current_point, self.goal_point)
-            #print("length = ", len(path))
-            if len(path) == 1:
-                next_pos = path[0]
-            else:
-                next_pos = path[1]
-
-            blocked_flag = False
+            if len(self.astar_route) == 1:#이미 도착했다면(처음시작점과 도착점이 같아버림)
+                if self.chanage_goal_astar():#다음위치로 가버립니다.
+                    self.is_work = False
+            next_pos = self.astar_route[self.astar_ind]#astar_ind를 기반으로 하여 바뀐 위치 아직 실제 로봇에 적용은 안함.
+            self.astar_ind +=1
+            # blocked_flag = False#막힌곳이 없을것이다.
             #print(next_pos)
             for control in move_control:
-                cand_y = control[0] + next_pos[0]
-                cand_x = control[1] + next_pos[1]
+                cand_y = control[0] + next_pos[0]#현재 이동한지점 주변에 도착했는지 찾습니다.
+                cand_x = control[1] + next_pos[1]#현재 이동한지점 주변에 도착했는지 찾습니다.
                 if self.occupy_map[cand_y][cand_x] == self.picking_point[self.last_ind+1]: # 주변에 사변이 해당로봇이 가야하는 지점과 목표 값이 같다면,
-                    print("check, check")
                     find_goal = True
-                    blocked_flag = False
 
             self.prev_point = [self.current_point[0], self.current_point[1]]
+            #현재 경로를 갱신하는부분
+            self.current_point[0] = next_pos[0]
+            self.current_point[1] = next_pos[1]
 
-            if not blocked_flag:
-                # 아직 도착을 못했다면,
-                self.current_point[0] = next_pos[0]
-                self.current_point[1] = next_pos[1]
+            if find_goal:# 골에 도착했다면 목표위치를 바꾼다.
+                if self.chanage_goal_astar():
+                    self.is_work = False
 
-                if find_goal:                                                      # 골에 도착했다면 목표위치를 바꾼다.
-                    if self.chanage_goal():
-                        self.is_work = False
-            else:
-                print("error occur : blocked robot")
-
+            #최근경로를 저장하는부분
             if len(self.route)<= self.route_maxind:
                 route_x = self.current_point[1]
                 route_y = self.current_point[0]
@@ -124,6 +119,7 @@ class warehouse_Robot:
                 route_x = self.current_point[1]
                 route_y = self.current_point[0]
                 self.route.append([route_y, route_x])
+
             route_x = self.current_point[1]
             route_y = self.current_point[0]
             self.full_route.append([route_y, route_x])
@@ -152,6 +148,51 @@ class warehouse_Robot:
             self.route = []
             self.full_route = []
             return True
+    def chanage_goal_astar(self):#패킹지점인지 확인한다.
+        last_index = len(self.picking_point)-1
+        if self.last_ind != last_index-1 :#last_ind가 패킹 선반 다돌고, 마지막 패킹지점으로 오지 않았다면(last_ind가 마지막에서 한 개 전이어야함.)
+            if self.last_ind <last_index-2:
+                goal_candidate = self.shelf_grid_list[self.last_ind+1]#해당 선반이 포함하고 있는 모든 점을 찾는다.
+                min_dis = 1000
+                min_ind = -1
+                for i, point in enumerate(goal_candidate):
+                    dis = (point[0] - self.current_point[0]) * (point[0] - self.current_point[0]) + (
+                                point[1] - self.current_point[1]) * (point[1] - self.current_point[1])
+                    if dis < min_dis:
+                        min_ind = i
+                        min_dis = dis
+                self.goal_point = goal_candidate[min_ind]  # 로봇과 가까운 지점.
+                self.astar_ind = 0
+                self.astar_route = astar_path(self.occupy_map, self.current_point, self.goal_point)
+            else :
+                self.goal_point = self.home_packing_station#골 후보를 그냥 패킹지점으로 준다.
+                self.astar_ind = 0
+                self.astar_route = astar_path(self.occupy_map, self.current_point, self.goal_point)
+            self.last_ind +=1
+            return False
+        else :#last_ind가 패킹 선반 다돌고, 마지막 패킹지점으로 왔다면
+            self.last_ind =0
+            self.route = []
+            self.full_route = []
+            return True
+    def assign_work_astar(self, picking_point, shelf_grid_list,occupy_map):
+        self.picking_point = [self.packing_station_ind] + picking_point + [self.packing_station_ind]
+        self.shelf_grid_list = shelf_grid_list
+        self.is_work = True
+        goal_candidate = self.shelf_grid_list[self.last_ind]  # 해당 선반이 포함하고 있는 모든 점을 찾는다.
+        min_dis = 1000
+        min_ind = -1
+        for i, point in enumerate(goal_candidate):
+            dis = (point[0] - self.current_point[0]) * (point[0] - self.current_point[0]) + (
+                    point[1] - self.current_point[1]) * (point[1] - self.current_point[1])
+            if dis < min_dis:
+                min_ind = i
+                min_dis = dis
+        self.goal_point = goal_candidate[min_ind]  # 로봇과 가까운 목표 선반 포인트를 찾는다.
+        self.occupy_map = occupy_map
+        self.astar_route = astar_path(self.occupy_map, self.current_point, self.goal_point)
+        self.astar_ind = 0
+        self.full_route = []
 
     def assign_work(self, picking_point, shelf_grid_list,occupy_map):
         self.picking_point = [self.packing_station_ind] + picking_point + [self.packing_station_ind]
@@ -347,14 +388,18 @@ def warehouse_tsp_solver(sim_data,order_data):
                     break
                 robot.is_work = True
                 '''
-                할당 
+                할당 FIFO
                 '''
                 order = order_data["orders"][:robot.capcity]
                 order_data["orders"] = order_data["orders"][robot.capcity:]
                 '''
                 경로생성 
                 '''
-                solved_order = solve_tsp(order,robot.packing_station_ind,sim_data["tsp_solver"],distance_cost,shelf_size)
+                new_order = []
+                for small_order in order:
+                    new_order = new_order + small_order
+                new_order_2 = list(set(new_order))
+                solved_order = solve_tsp(new_order_2,robot.packing_station_ind,sim_data["tsp_solver"],distance_cost,shelf_size)
 
                 '''
                 로봇에게 업무할당간에 전처리
@@ -362,7 +407,7 @@ def warehouse_tsp_solver(sim_data,order_data):
                 part_shelf_grid = []
                 for shelf_grid in solved_order:
                     part_shelf_grid.append(shelf_grid_list[shelf_grid-1])
-                robot.assign_work(solved_order,part_shelf_grid,occupy_map)
+                robot.assign_work_astar(solved_order,part_shelf_grid,occupy_map)
 
         #로봇을 이동시킵니다.
         # 로봇의 위치를 공유변수에 저장합니다.
@@ -410,11 +455,13 @@ def warehouse_order_maker(order_info, no_use):
     while not order_info["is_set_order"]:
         pass
     kind = order_info['order_kind']
-    order_info["orders"] = [random.choice(list(range(1,kind+1))) for i in range(initOrder)]
-
+    # order_info["orders"] = [random.choice(list(range(1,kind+1))) for i in range(initOrder)]
+    order_info["orders"] = [list(set([random.choice(list(range(1, kind + 1))) for i in range(5)])) for i in range(initOrder)]
     order_info["is_set_initOrder"] = True
     while True:
         time.sleep(1)
-        new_order = [random.choice(list(range(1,kind+1))) for i in range(order_rate)]
-        order_info["orders"] = order_info["orders"] +new_order
-        # print("remained order", len(order_info["orders"]))
+        # new_order = [random.choice(list(range(1,kind+1))) for i in range(order_rate)]
+        # order_info["orders"] = order_info["orders"] +new_order
+        #order를 2차원배열의 형태로 추가합니다.
+        new_order = [list(set([random.choice(list(range(1,kind+1))) for i in range(5)])) for i in range(order_rate)]
+        order_info["orders"] = order_info["orders"] + new_order

@@ -84,7 +84,7 @@ class Simulator(QLabel):
 
 
                 for j, points in enumerate(self.sim_data["robot_full_routes"]):
-                    color = self.sim_data["route_color"][self.sim_data['packing_ind'][j]]
+                    color = self.sim_data["packing_color"][self.sim_data['packing_ind'][j]]
                     qp.setPen(QPen(QColor(color[0], color[1], color[2]), 4))
                     for i in range(len(points)-1):
 
@@ -100,7 +100,7 @@ class Simulator(QLabel):
 
 
                 for j, points in enumerate(self.sim_data["robot_routes"]):
-                    color = self.sim_data["route_color"][self.sim_data['packing_ind'][j]]
+                    color = self.sim_data["packing_color"][self.sim_data['packing_ind'][j]]
                     qp.setPen(QPen(QColor(color[0], color[1], color[2]), 2))
                     for i in range(len(points)-1):
 
@@ -118,7 +118,7 @@ class Simulator(QLabel):
 
                 qp.drawRect(self.map_width / self.map_resolution * x,self.map_height / self.map_resolution_2 * y,self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
             for i, [x,y] in enumerate(self.sim_data['packing_point']):
-                color = self.sim_data["route_color"][i]
+                color = self.sim_data["packing_color"][i]
                 # print([x,y])
                 qp.setBrush(QColor(color[0], color[1], color[2]))
                 small_x_index = math.floor((x- init_x) / self.res_width)  # 맨왼쪽 포함
@@ -279,7 +279,7 @@ class Widget_Simulator(QWidget):
         self.is_view_full_route = False
         self.checkBox_viewAllShelf.stateChanged.connect(self.viewShelf)
         self.timer = QTimer(self)
-        self.tsp_mode = "NO_TSP"
+        self.tsp_mode = "ACO"
         self.timer.timeout.connect(self.update_orders)
         self.radioButton_ACO.clicked.connect(self.set_aco)
         self.radioButton_GA.clicked.connect(self.set_ga)
@@ -326,6 +326,7 @@ class Widget_Simulator(QWidget):
     def set_data(self, order_data,sim_data):
         self.order_data = order_data
         self.sim_data = sim_data
+        self.sim_data["tsp_solver"] = self.tsp_mode
 
     def viewShelf(self):
         if self.is_view_shelf:
@@ -380,6 +381,7 @@ class Widget_Simulator(QWidget):
         self.image.setMapImage(self.map_name)#self.map_name의 이미지를 다운로드해서 그립니다.
         self.image.resize(self.map_width,self.map_height)#그려지는 이미지의 사이즈를 원래 맵의 형태로 합니다.
         self.image.setData(self.sim_shared_data,self.map_data,self.ui_info)
+
         # 전체 시물레이션의 위젯 크기를 조정합니다.
         self.setFixedWidth(self.map_width+10+self.groupBox_viewer.width()+10)
         self.groupBox_viewer.move(self.map_width+10,20)
