@@ -1,4 +1,8 @@
 import ACO
+from DC import *
+from PSO import *
+
+
 def solve_tsp(orders, packing_point, tsp_solve_way,distance_cost,shelf_size):
     used_packing_point = shelf_size+ (packing_point-20001)
     # print(packing_point, orders)
@@ -12,12 +16,13 @@ def solve_tsp(orders, packing_point, tsp_solve_way,distance_cost,shelf_size):
     if tsp_solve_way == "NO_TSP":
         pass
     elif tsp_solve_way == "GA":
-        pass
+        refined_orders = tsp_dc(refined_orders, distance_cost)
     elif tsp_solve_way == "PSO":
-        pass
+        refined_orders = tsp_pso(refined_orders, distance_cost)
     elif tsp_solve_way == "ACO":
-        # pass
-        refined_orders = ACO.get_path(refined_orders,distance_cost)
+        refined_orders = ACO.get_path(refined_orders, distance_cost)
+    elif tsp_solve_way == "DC":
+        refined_orders = tsp_dc(refined_orders, distance_cost)
         # print("remake",refined_orders)
 
 
@@ -25,7 +30,7 @@ def solve_tsp(orders, packing_point, tsp_solve_way,distance_cost,shelf_size):
     ##풀린 경로를 반환하는 부분 건드리질 말것.
     return_orders = []
     for i, order in enumerate(refined_orders):
-        if i ==0:
+        if i == 0:
             continue
         else:
             return_orders.append(order+1)

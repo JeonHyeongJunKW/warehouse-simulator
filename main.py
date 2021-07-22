@@ -139,7 +139,7 @@ if __name__ == "__main__":
     #시물레이션을 본격적으로 돌리는 프로세스 입니다.
     sim_data = Manager().dict()
     order_data = Manager().dict()
-    sim_data["tsp_solver"] = "NO_TSP"
+    sim_data["tsp_solver"] = "DC"
     order_data["is_start"] = False
     sim_data["is_start"] = False
     sim_data["robot_cordinates"] =[]
