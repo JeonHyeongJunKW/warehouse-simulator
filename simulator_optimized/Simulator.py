@@ -4,7 +4,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import math
 import json
-import time
 
 class Simulator(QLabel):
     def __init__(self, *args, **kwargs):
@@ -40,23 +39,16 @@ class Simulator(QLabel):
         if self.draw_image:
             qp.drawPixmap(self.rect(),self.qPixmapVar)
         if self.sim_data:
-
-            robot_cordlist =self.sim_data["robot_cordinates"]
-            robot_shelf = self.sim_data["shelf_node"]
-            goal_cordinates = self.sim_data["goal_cordinates"]
-            packing_color = self.sim_data["packing_color"]
-            robot_routes = self.sim_data["robot_routes"]
-            packing_point = self.sim_data['packing_point']
-            robot_full_routes = self.sim_data["robot_full_routes"]
-            for i,[y, x] in enumerate(robot_cordlist):
+            # print(self.sim_data["robot_cordinates"])
+            for i,[y, x] in enumerate(self.sim_data["robot_cordinates"]):
                 qp.setBrush(QColor(0, 0, 0))
                 qp.setPen(QPen(QColor(189, 189, 189), 2))
                 qp.drawRect(self.map_width/self.map_resolution *x, self.map_height/self.map_resolution_2 *y, self.map_width/self.map_resolution, self.map_height/self.map_resolution_2)
             init_x = self.ui_info[0]
             init_y = self.ui_info[1]
-
             if self.is_view_shelf:
-                for i, ind_list in enumerate(robot_shelf):
+
+                for i, ind_list in enumerate(self.sim_data["shelf_node"]):
                     qp.setBrush(QColor(255, 187, 0))
 
                     # x =self.shelfs[ind-1][0]- self.ui_info[0]
@@ -86,15 +78,13 @@ class Simulator(QLabel):
                                 lefttop_x = self.res_width * j
                                 lefttop_y = self.res_heigth * i
                                 qp.drawRect(lefttop_x, lefttop_y, self.res_width, self.res_heigth)
-
-
             if self.is_view_full_route:
                 init_x = self.ui_info[0]
                 init_y = self.ui_info[1]
 
 
-                for j, points in enumerate(robot_full_routes):
-                    color = packing_color[self.sim_data['packing_ind'][j]]
+                for j, points in enumerate(self.sim_data["robot_full_routes"]):
+                    color = self.sim_data["packing_color"][self.sim_data['packing_ind'][j]]
                     qp.setPen(QPen(QColor(color[0], color[1], color[2]), 4))
                     for i in range(len(points)-1):
 
@@ -109,8 +99,8 @@ class Simulator(QLabel):
                 init_y = self.ui_info[1]
 
 
-                for j, points in enumerate(robot_routes):
-                    color = packing_color[self.sim_data['packing_ind'][j]]
+                for j, points in enumerate(self.sim_data["robot_routes"]):
+                    color = self.sim_data["packing_color"][self.sim_data['packing_ind'][j]]
                     qp.setPen(QPen(QColor(color[0], color[1], color[2]), 2))
                     for i in range(len(points)-1):
 
@@ -123,14 +113,12 @@ class Simulator(QLabel):
                 #경로를 어떻게 다른색으로 표현할까?
             qp.setPen(QPen(QColor(189,189,189), 2))
             #로봇의 현재 목표점을 그립니다.
-            for i, [y, x] in enumerate(goal_cordinates):
+            for i, [y, x] in enumerate(self.sim_data["goal_cordinates"]):
                 qp.setBrush(QColor(255, 0, 0))
 
                 qp.drawRect(self.map_width / self.map_resolution * x,self.map_height / self.map_resolution_2 * y,self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
-
-            # print("draw all2")
-            for i, [x,y] in enumerate(packing_point):
-                color = packing_color[i]
+            for i, [x,y] in enumerate(self.sim_data['packing_point']):
+                color = self.sim_data["packing_color"][i]
                 # print([x,y])
                 qp.setBrush(QColor(color[0], color[1], color[2]))
                 small_x_index = math.floor((x- init_x) / self.res_width)  # 맨왼쪽 포함
@@ -139,7 +127,6 @@ class Simulator(QLabel):
                 small_y_index = self.res_heigth * small_y_index
                 qp.drawRect(small_x_index, small_y_index,
                             self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
-            # print("draw all3")
         qp.end()
 
 
@@ -312,34 +299,6 @@ class Widget_Simulator(QWidget):
         - 문제점 : 과연 위젯 위에 draw가 될까? 
         2. 
         '''
-    def closeEvent(self, QCloseEvent):
-        self.sim_data['is_kill_robot_move'] = True
-        time.sleep(0.3)
-
-        print("its done")
-        self.sim_data["tsp_solver"] = "DC"
-        self.order_data["is_start"] = False
-        self.sim_data["is_start"] = False
-        self.sim_data["robot_cordinates"] = []
-        self.sim_data["goal_cordinates"] = []
-        self.sim_data["shelf_node"] = []
-        self.sim_data["robot_routes"] = []
-        self.sim_data["packing_ind"] = []
-        self.sim_data["packing_color"] = []
-        self.sim_data["packing_point"] = []
-        self.sim_data["robot_full_routes"] = []
-        self.sim_data["number_order"] = 0
-        self.order_data["is_set_order"] = False  # 선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
-        self.order_data["is_set_initOrder"] = False  # 초기 주문들이 다 정해졋을때, 사용하는 변수
-        self.sim_data["reset"] =True
-        self.order_data["reset"] = True
-
-
-
-    def set_process(self, order_maker, warehouse_tsp_solver):
-        self.order_maker =order_maker
-        self.warehouse_tsp_solver = warehouse_tsp_solver
-
     def set_greedy(self):
         self.tsp_mode = "GREEDY"
         self.sim_data["tsp_solver"] = self.tsp_mode

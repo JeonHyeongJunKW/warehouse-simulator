@@ -36,7 +36,7 @@ class WindowClass(QMainWindow, form_class):
         self.simulator = Widget_Simulator()
         self.simulator.hide()
         self.map_data = None
-        self.run_count = 0#시물레이션을 돌린횟수입니다.
+
         #시그널링 설정
         self.button_openmapmaker.clicked.connect(self.openMap)
         self.button_loadMap.clicked.connect(self.loadMap)
@@ -52,15 +52,12 @@ class WindowClass(QMainWindow, form_class):
         self.sim_data = sim_data
 
     def closeEvent(self, QCloseEvent):
-        self.sim_data['is_kill_robot_move'] = True
-        time.sleep(0.3)
         self.order_maker.kill()
         self.warehouse_tsp_solver.kill()
 
     def openSimulator(self):
         if self.simulator :
             del self.simulator
-
         self.simulator = Widget_Simulator()
         if not self.map_data:
             msgBox = QMessageBox()
@@ -76,7 +73,6 @@ class WindowClass(QMainWindow, form_class):
             msgBox.setText("시물레이션의 정보가 없습니다.")
             msgBox.exec_()
             return False
-        self.simulator.set_process(self.order_maker,self.warehouse_tsp_solver)
         self.simulator.set_shared_data(self.sim_data)
         self.simulator.setSimInfo(self.simulation_maker.sim_data)
         self.simulator.start_setting()
@@ -93,7 +89,6 @@ class WindowClass(QMainWindow, form_class):
 
         self.simulator.set_data(self.order_data,self.sim_data)
         self.simulator.show()
-        self.run_count +=1
 
     def openMap(self):
         if self.mapMaker :
@@ -138,41 +133,36 @@ class WindowClass(QMainWindow, form_class):
             self.simulation_maker.show()
 
 if __name__ == "__main__":
-    try:
-        os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] ='1'
-        app = QApplication(sys.argv)
-        app.setAttribute(Qt.AA_EnableHighDpiScaling)
-        #시물레이션을 본격적으로 돌리는 프로세스 입니다.
-        sim_data = Manager().dict()
-        order_data = Manager().dict()
-        sim_data["tsp_solver"] = "DC"
-        order_data["is_start"] = False
-        sim_data["is_start"] = False
-        sim_data["robot_cordinates"] =[]
-        sim_data["goal_cordinates"] = []
-        sim_data["shelf_node"] = []
-        sim_data["robot_routes"] = []
-        sim_data["packing_ind"] = []
-        sim_data["packing_color"] = []
-        sim_data["packing_point"] = []
-        sim_data["robot_full_routes"] = []
-        sim_data["number_order"] =0
-        order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
-        order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
-        order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
-        warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
-        order_maker.start()
-        warehouse_tsp_solver.start()
-        #GUI를 담당하는 프로세스 입니다.
-        myWindow = WindowClass()
-        myWindow.getProcess(order_maker,warehouse_tsp_solver)
-        myWindow.set_data(order_data,sim_data)
-        myWindow.show()
-        app.exec_()
-    except:
-        order_maker.join()
-        warehouse_tsp_solver.join()
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] ='1'
+    app = QApplication(sys.argv)
+    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    #시물레이션을 본격적으로 돌리는 프로세스 입니다.
+    sim_data = Manager().dict()
+    order_data = Manager().dict()
+    sim_data["tsp_solver"] = "DC"
+    order_data["is_start"] = False
+    sim_data["is_start"] = False
+    sim_data["robot_cordinates"] =[]
+    sim_data["goal_cordinates"] = []
+    sim_data["shelf_node"] = []
+    sim_data["robot_routes"] = []
+    sim_data["packing_ind"] = []
+    sim_data["packing_color"] = []
+    sim_data["packing_point"] = []
+    sim_data["robot_full_routes"] = []
+    sim_data["number_order"] =0
+    order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
+    order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
+    order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
+    warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
+    order_maker.start()
+    warehouse_tsp_solver.start()
+    #GUI를 담당하는 프로세스 입니다.
+    myWindow = WindowClass()
+    myWindow.getProcess(order_maker,warehouse_tsp_solver)
+    myWindow.set_data(order_data,sim_data)
+    myWindow.show()
 
 
-
+    app.exec_()
 
