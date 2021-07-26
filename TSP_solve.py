@@ -1,6 +1,7 @@
 import ACO
 from DC import *
 from PSO import *
+from NN import *
 
 
 def solve_tsp(orders, packing_point, tsp_solve_way,distance_cost,shelf_size,real_cordinate):
@@ -23,9 +24,9 @@ def solve_tsp(orders, packing_point, tsp_solve_way,distance_cost,shelf_size,real
     elif tsp_solve_way == "ACO":
         refined_orders = ACO.get_path(refined_orders, distance_cost)
     elif tsp_solve_way == "DC":
-        refined_orders = tsp_dc(refined_orders, distance_cost)
+        refined_orders = tsp_dc(refined_orders, distance_cost, real_cordinate)
     elif tsp_solve_way == "GREEDY":
-        pass
+        refined_orders = tsp_nn(refined_orders, distance_cost)
 
 
 

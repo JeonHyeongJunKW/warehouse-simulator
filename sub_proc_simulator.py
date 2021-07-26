@@ -257,6 +257,7 @@ def getbrightColorSet(color_num):
         color_base =(color_base+1)%4
     return color_list
 
+
 def robot_mover(robot_data,sim_data):
     move_ind = 0
     while True:
@@ -299,8 +300,6 @@ def robot_mover(robot_data,sim_data):
         real_time = want_time- (time.time()-start)
         if real_time >0:
             time.sleep(real_time)
-
-
 
 
 def warehouse_tsp_solver(sim_data,order_data):
