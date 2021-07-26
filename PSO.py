@@ -25,7 +25,6 @@ class Graph:
 
     # shows all the links of the graph
     def showGraph(self):
-        print('Showing the graph:\n')
         for edge in self.edges:
             print('%d linked in %d with cost %d' % (edge[0], edge[1], self.edges[edge]))
 
@@ -34,7 +33,6 @@ class Graph:
 
         total_cost = 0
         for i in range(self.amount_vertices - 1):
-            #print(self.amount_vertices, "number of i = ", i, "This is path = ", path)
             total_cost += self.edges[(path[i], path[i + 1])]
 
         # add cost of the last edge
@@ -48,7 +46,6 @@ class Graph:
 
         initial_vertice = random.choice(list_vertices)
         if initial_vertice not in list_vertices:
-            print('Error: initial vertice %d not exists!' % initial_vertice)
             sys.exit(1)
 
         list_vertices.remove(initial_vertice)
@@ -153,7 +150,6 @@ class PSO:
 
         # initialized with a group of random particles (solutions)
         solutions = self.graph.getRandomPaths(self.size_population)
-        #print(solutions)
         # checks if exists any solution
         if not solutions:
             print('Initial population empty! Try run the algorithm again...')
@@ -180,12 +176,10 @@ class PSO:
     # shows the info of the particles
     def showsParticles(self):
 
-        print('Showing particles...\n')
         for particle in self.particles:
             print('pbest: %s\t|\tcost pbest: %d\t|\tcurrent solution: %s\t|\tcost current solution: %d' \
                   % (str(particle.getPBest()), particle.getCostPBest(), str(particle.getCurrentSolution()),
                      particle.getCostCurrentSolution()))
-        print('')
 
     def run(self):
 
@@ -207,7 +201,7 @@ class PSO:
 
                 # generates all swap operators to calculate (pbest - x(t-1))
                 for i in range(self.graph.amount_vertices):
-                    #print(i)
+
                     if solution_particle[i] != solution_pbest[i]:
                         # generates swap operator
                         swap_operator = (i, solution_pbest.index(solution_particle[i]), self.alfa)
@@ -275,7 +269,6 @@ def check_double(nodes):
 
 def tsp_pso(pso_path, pso_cost):
     # creates the Graph instance
-    print(pso_path)
     node_num = len(pso_path)
     #print(node_num,"path = ",pso_path)
     start_node = pso_path[0]

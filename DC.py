@@ -2,10 +2,11 @@ import math
 import time
 
 class DivideConquer:
-    def __init__(self, points, distance):
+    def __init__(self, points, distance, cordinate):
         self.points = points
         self.solution = []
         self.distance = distance
+        self.cordinate = cordinate
 
     def run(self):
         self.solution = self.solve(self.points)
@@ -20,17 +21,23 @@ class DivideConquer:
         elif len(points) == 2:
             return [(points[0], points[1])]
         else:
-            div_1, div_2 = self.split_cities(points)
+            div_1, div_2 = self.split_points(points)
             graph_1 = self.solve(div_1)
             graph_2 = self.solve(div_2)
             merge = self.merge(graph_1, graph_2)
 
             return merge
 
-    def split_cities(self, cities):
-        middle = len(cities) // 2
+    def split_points(self, points):
+        middle = len(points) // 2
+        points_by_x = sorted(points, key=lambda point: self.cordinate[point][1])
+        points_by_y = sorted(points, key=lambda point: self.cordinate[point][0])
 
-        return cities[:middle], cities[middle:]
+        if abs(self.cordinate[points_by_x[0]][1] - self.cordinate[points_by_x[-1]][1]) > \
+                abs(self.cordinate[points_by_y[0]][0] - self.cordinate[points_by_y[-1]][0]):
+            return points_by_x[:middle], points_by_x[middle:]
+        else:
+            return points_by_y[:middle], points_by_y[middle:]
 
     def merge(self, graph_1, graph_2):
         if isinstance(graph_1, int):
@@ -69,19 +76,15 @@ class DivideConquer:
         return graph_1
 
 
-def tsp_dc(index, distance):
-    #print(index)
-    #print("first")
-    divideprocess = DivideConquer(index, distance)
-    path = divideprocess.run()
-    #print("second")
-    #print(path)
+def tsp_dc(index, distance, cordinate):
+
+    divide_process = DivideConquer(index, distance, cordinate)
+    path = divide_process.run()
+
     path_index = [index[0]]
     route_check = True
     while route_check:
-        #print("path = ", path)
-        #print("path_index = ", path_index)
-        #time.sleep(3)
+
         for num, edge in enumerate(path):
             if edge[0] == path_index[-1]:
                 path_index.append(edge[1])
@@ -94,8 +97,7 @@ def tsp_dc(index, distance):
         if not path:
             del path_index[-1]
             route_check = False
-    #print("checkcheck")
-    #print(path_index)
+
     return path_index
 
 

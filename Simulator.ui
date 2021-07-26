@@ -24,7 +24,7 @@
      <x>700</x>
      <y>20</y>
      <width>181</width>
-     <height>291</height>
+     <height>371</height>
     </rect>
    </property>
    <property name="font">
@@ -78,7 +78,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Genetic algorithm</string>
+     <string>GA</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_PSO">
@@ -152,7 +152,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>130</y>
+      <y>190</y>
       <width>131</width>
       <height>21</height>
      </rect>
@@ -175,7 +175,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>160</y>
+      <y>220</y>
       <width>131</width>
       <height>21</height>
      </rect>
@@ -195,7 +195,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>210</y>
+      <y>280</y>
       <width>81</width>
       <height>21</height>
      </rect>
@@ -219,7 +219,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>240</y>
+      <y>310</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -243,7 +243,7 @@
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>240</y>
+      <y>310</y>
       <width>21</width>
       <height>31</height>
      </rect>
@@ -264,7 +264,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>190</y>
+      <y>250</y>
       <width>131</width>
       <height>21</height>
      </rect>
@@ -278,6 +278,46 @@
     </property>
     <property name="text">
      <string>전체 경로보기</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton_DC">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>120</y>
+      <width>130</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>DC</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton_GREEDY">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>140</y>
+      <width>130</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Greedy</string>
     </property>
    </widget>
   </widget>

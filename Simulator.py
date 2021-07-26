@@ -284,7 +284,10 @@ class Widget_Simulator(QWidget):
         self.radioButton_ACO.clicked.connect(self.set_aco)
         self.radioButton_GA.clicked.connect(self.set_ga)
         self.radioButton_PSO.clicked.connect(self.set_pso)
+        self.radioButton_DC.clicked.connect(self.set_dc)
+        self.radioButton_GREEDY.clicked.connect(self.set_greedy)
         self.radioButton_notsp.clicked.connect(self.set_notsp)
+
         self.checkBox_viewRoute.stateChanged.connect(self.viewRoute)
         self.checkBox_viewFullRoute.stateChanged.connect(self.viewFullRoute)
         '''
@@ -296,6 +299,14 @@ class Widget_Simulator(QWidget):
         - 문제점 : 과연 위젯 위에 draw가 될까? 
         2. 
         '''
+    def set_greedy(self):
+        self.tsp_mode = "GREEDY"
+        self.sim_data["tsp_solver"] = self.tsp_mode
+
+    def set_dc(self):
+        self.tsp_mode = "DC"
+        self.sim_data["tsp_solver"] = self.tsp_mode
+
     def viewFullRoute(self):
         if self.is_view_full_route:
             self.is_view_full_route = False

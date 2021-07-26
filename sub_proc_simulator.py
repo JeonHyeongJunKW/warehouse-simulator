@@ -300,8 +300,20 @@ def warehouse_tsp_solver(sim_data,order_data):
     the_number_of_node = len(saved_shelf_point)+len(saved_pk_point)
     shelf_size = len(saved_shelf_point)
     distance_cost = [[0 for _ in range(the_number_of_node)] for _ in range(the_number_of_node)]
-
+    real_cordinate =[]
+    #실제 좌표에 대한 유클리드 거리르 사용한다.
+    # 패킹지점을 포함한 모든점에 대한 좌표를 2차원리스트의 형태로 저장합니다.
     for i in range(the_number_of_node):
+        if i >= shelf_size:  # 만약에 선반이 아닌 패킹지점에 대한거라면
+            i_pos_x = saved_pk_point[i - shelf_size][0] - init_map_x
+            i_pos_y = saved_pk_point[i - shelf_size][1] - init_map_y
+            pose_point = [i_pos_y, i_pos_x]
+        else:  # 선반에 대한거라면
+            i_pos_x = saved_shelf_point[i][0] - init_map_x
+            i_pos_y = saved_shelf_point[i][1] - init_map_y
+            pose_point = [i_pos_y, i_pos_x]
+        real_cordinate.append(pose_point)
+
         for j in range(the_number_of_node):
             if i >=shelf_size:#만약에 선반이 아닌 패킹지점에 대한거라면
                 i_pos_x = saved_pk_point[i-shelf_size][0]- init_map_x
@@ -321,6 +333,9 @@ def warehouse_tsp_solver(sim_data,order_data):
                 j_pos_y = saved_shelf_point[j][1] - init_map_y
                 j_pos = [j_pos_x, j_pos_y]
             distance_cost[i][j] = (i_pos[0]-j_pos[0])*(i_pos[0]-j_pos[0]) +(i_pos[1]-j_pos[1])*(i_pos[1]-j_pos[1])
+
+
+
     #패킹지점별 고유 색깔을 지정받는다.
     sim_data["packing_color"] = getColorSet(len(saved_pk_point))
     sim_data["route_color"] = getbrightColorSet(len(saved_pk_point))
@@ -399,7 +414,7 @@ def warehouse_tsp_solver(sim_data,order_data):
                 for small_order in order:
                     new_order = new_order + small_order
                 new_order_2 = list(set(new_order))
-                solved_order = solve_tsp(new_order_2,robot.packing_station_ind,sim_data["tsp_solver"],distance_cost,shelf_size)
+                solved_order = solve_tsp(new_order_2,robot.packing_station_ind,sim_data["tsp_solver"],distance_cost,shelf_size,real_cordinate)
 
                 '''
                 로봇에게 업무할당간에 전처리
