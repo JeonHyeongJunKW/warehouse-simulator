@@ -356,7 +356,7 @@
       </font>
      </property>
      <property name="text">
-      <string>6</string>
+      <string>1</string>
      </property>
      <property name="frame">
       <bool>true</bool>
@@ -399,7 +399,7 @@
       </font>
      </property>
      <property name="text">
-      <string>100</string>
+      <string>1</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

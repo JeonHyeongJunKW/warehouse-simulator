@@ -4,7 +4,7 @@ from PyQt5 import uic
 from PyQt5.QtGui import *
 import urllib.request
 import json
-
+import psutil
 form_class = uic.loadUiType("./main_window.ui")[0]
 from PyQt5.QtCore import Qt
 from Map import *
@@ -56,6 +56,10 @@ class WindowClass(QMainWindow, form_class):
         time.sleep(0.3)
         self.order_maker.kill()
         self.warehouse_tsp_solver.kill()
+        parent = psutil.Process(os.getpid())
+        children = parent.children(recursive=True)
+        for process in children:
+            process.kill()
 
     def openSimulator(self):
         if self.simulator :
@@ -145,7 +149,7 @@ if __name__ == "__main__":
         #시물레이션을 본격적으로 돌리는 프로세스 입니다.
         sim_data = Manager().dict()
         order_data = Manager().dict()
-        sim_data["tsp_solver"] = "DC"
+        sim_data["tsp_solver"] = "ACO"
         order_data["is_start"] = False
         sim_data["is_start"] = False
         sim_data["robot_cordinates"] =[]
@@ -157,8 +161,13 @@ if __name__ == "__main__":
         sim_data["packing_point"] = []
         sim_data["robot_full_routes"] = []
         sim_data["number_order"] =0
+        sim_data['compare_robot_ind'] =0
+        sim_data['compare_route'] = []
+        sim_data["compare_tsp_solver"] = "ACO"
+        sim_data["tsp_length"] = [1000,1000,1000,1000,1000,1000]
         order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
         order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
+        order_data["len_order"] =0
         order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
         warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
         order_maker.start()

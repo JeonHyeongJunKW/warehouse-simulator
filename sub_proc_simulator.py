@@ -380,7 +380,7 @@ def warehouse_tsp_solver(sim_data,order_data):
                     j_pos = [j_pos_x, j_pos_y]
                 distance_cost[i][j] = (i_pos[0]-j_pos[0])*(i_pos[0]-j_pos[0]) +(i_pos[1]-j_pos[1])*(i_pos[1]-j_pos[1])
 
-
+        sim_data["real_cordinate"] = real_cordinate
 
         #패킹지점별 고유 색깔을 지정받는다.
         sim_data["packing_color"] = getColorSet(len(saved_pk_point))
@@ -464,8 +464,13 @@ def warehouse_tsp_solver(sim_data,order_data):
                     for small_order in order:
                         new_order = new_order + small_order
                     new_order_2 = list(set(new_order))
-                    solved_order = solve_tsp(new_order_2,robot.packing_station_ind,sim_data["tsp_solver"],distance_cost,shelf_size,real_cordinate)
-
+                    solver_method =sim_data["tsp_solver"]
+                    solved_order = solve_tsp(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate)
+                    if robot_ind == sim_data['compare_robot_ind']:
+                        all_route,all_length, all_time = solve_tsp_all_algorithm(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate,solved_order)
+                        sim_data["tsp_length"] = all_length
+                        sim_data['compare_route'] = all_route
+                        sim_data["compare_tsp_solver"] = sim_data["tsp_solver"]
                     '''
                     로봇에게 업무할당간에 전처리
                     '''
@@ -473,8 +478,7 @@ def warehouse_tsp_solver(sim_data,order_data):
                     for shelf_grid in solved_order:
                         part_shelf_grid.append(shelf_grid_list[shelf_grid-1])
                     robot.assign_work_astar(solved_order,part_shelf_grid,occupy_map)
-                    # 현재 남은 주문량을 공유변수에 저장합니다.
-                    sim_data["number_order"] = len(order_data["orders"])
+
                     robots = robot_data['robot']
                     robots[robot_ind] = robot
                     robot_data['robot'] = robots
@@ -517,3 +521,4 @@ def warehouse_order_maker(order_info, no_use):
             #order를 2차원배열의 형태로 추가합니다.
             new_order = [list(set([random.choice(list(range(1,kind+1))) for i in range(5)])) for i in range(order_rate)]
             order_info["orders"] = order_info["orders"] + new_order
+            order_info["len_order"] = len(order_info["orders"])

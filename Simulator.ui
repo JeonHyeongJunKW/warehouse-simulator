@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>500</height>
+    <height>540</height>
    </rect>
   </property>
   <property name="font">
@@ -43,7 +43,7 @@
      <rect>
       <x>20</x>
       <y>40</y>
-      <width>141</width>
+      <width>81</width>
       <height>16</height>
      </rect>
     </property>
@@ -66,7 +66,7 @@
      <rect>
       <x>20</x>
       <y>60</y>
-      <width>131</width>
+      <width>71</width>
       <height>21</height>
      </rect>
     </property>
@@ -318,6 +318,50 @@
     </property>
     <property name="text">
      <string>Greedy</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_modecompare">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>170</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>HY견고딕</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <kerning>true</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>알고리즘 비교모드 </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_lengthsay">
+    <property name="geometry">
+     <rect>
+      <x>103</x>
+      <y>20</y>
+      <width>61</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>알고리즘별 
+ 경로 길이 </string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
   </widget>

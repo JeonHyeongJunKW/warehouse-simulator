@@ -17,6 +17,7 @@ class Simulator(QLabel):
         self.is_view_shelf = False
         self.is_view_route = False
         self.is_view_full_route = False
+        self.is_mode_compare = False
 
     def setData(self,sim_data, map_data,ui_info):
         self.sim_data = sim_data
@@ -48,6 +49,7 @@ class Simulator(QLabel):
             robot_routes = self.sim_data["robot_routes"]
             packing_point = self.sim_data['packing_point']
             robot_full_routes = self.sim_data["robot_full_routes"]
+            compare_route = self.sim_data['compare_route']
             for i,[y, x] in enumerate(robot_cordlist):
                 qp.setBrush(QColor(0, 0, 0))
                 qp.setPen(QPen(QColor(189, 189, 189), 2))
@@ -128,10 +130,8 @@ class Simulator(QLabel):
 
                 qp.drawRect(self.map_width / self.map_resolution * x,self.map_height / self.map_resolution_2 * y,self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
 
-            # print("draw all2")
             for i, [x,y] in enumerate(packing_point):
                 color = packing_color[i]
-                # print([x,y])
                 qp.setBrush(QColor(color[0], color[1], color[2]))
                 small_x_index = math.floor((x- init_x) / self.res_width)  # 맨왼쪽 포함
                 small_y_index = math.floor((y - init_y) / self.res_heigth)
@@ -139,7 +139,134 @@ class Simulator(QLabel):
                 small_y_index = self.res_heigth * small_y_index
                 qp.drawRect(small_x_index, small_y_index,
                             self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
-            # print("draw all3")
+            if self.is_mode_compare:
+                # 각 알고리즘별 경로를 그립니다.
+                if len(compare_route) ==6:
+                    qp.setBrush(QColor(217, 65, 197))
+
+                    comp_ind =self.sim_data['compare_robot_ind']
+                    if len(robot_shelf)>0:
+                        for ind in robot_shelf[comp_ind][1:-1]:
+                            point = self.shelfs[ind - 1]
+                            if point[2] == 0 or point[2] == 180:
+                                lefttop = [point[0] - int(point[3] / 2),
+                                           point[1] - int(point[4] / 2)]
+                                rightbottom = [point[0] + int(point[3] / 2),
+                                               point[1] + int(point[4] / 2)]
+                            else:
+                                lefttop = [point[0] - int(point[4] / 2),
+                                           point[1] - int(point[3] / 2)]
+                                rightbottom = [point[0] + int(point[4] / 2),
+                                               point[1] + int(point[3] / 2)]
+
+                            small_x_index = math.floor((lefttop[0] - init_x) / self.res_width)  # 맨왼쪽 포함
+                            big_x_index = math.ceil((rightbottom[0] - init_x) / self.res_width)
+                            small_y_index = math.floor((lefttop[1] - init_y) / self.res_heigth)
+                            big_y_index = math.ceil((rightbottom[1] - init_y) / self.res_heigth)
+                            for i in range(small_y_index, big_y_index):
+                                for j in range(small_x_index, big_x_index):
+                                    lefttop_x = self.res_width * j
+                                    lefttop_y = self.res_heigth * i
+                                    qp.drawRect(lefttop_x, lefttop_y, self.res_width, self.res_heigth)
+
+                        cordinate = self.sim_data["real_cordinate"]
+                        # print(cordinate)
+                        Qpens = [QPen(QColor(255,0,0), 2),
+                                 QPen(QColor(255,228,0), 2),
+                                 QPen(QColor(29,219,22), 2),
+                                 QPen(QColor(0,84,225), 2),
+                                 QPen(QColor(255,0,221), 2),
+                                 QPen(QColor(0,216,255), 2)
+                                 ]
+
+                        for num, route in enumerate(compare_route):
+                            qp.setPen(Qpens[num])
+                            for i in range(len(route)-1):
+                                [y_1, x_1]= cordinate[route[i]]
+                                [y_2, x_2] = cordinate[route[i+1]]
+                                qp.drawLine(x_1,y_1,x_2,y_2)
+                            [y_1, x_1] = cordinate[route[-1]]
+                            [y_2, x_2] = cordinate[route[0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+
+                        solver = self.sim_data["tsp_solver"]
+                        if solver == "NO_TSP":
+                            Qpens[0] = QPen(QColor(255, 0, 0), 10)
+                            num =0
+                            qp.setPen(Qpens[num])
+                            for i in range(len(compare_route[num]) - 1):
+                                [y_1, x_1] = cordinate[compare_route[num][i]]
+                                [y_2, x_2] = cordinate[compare_route[num][i + 1]]
+                                qp.drawLine(x_1, y_1, x_2, y_2)
+                            [y_1, x_1] = cordinate[compare_route[num][-1]]
+                            [y_2, x_2] = cordinate[compare_route[num][0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+                        elif solver == "GA":
+                            Qpens[1] = QPen(QColor(255, 187, 0), 10)
+                            num = 1
+                            qp.setPen(Qpens[num])
+                            for i in range(len(compare_route[num]) - 1):
+                                [y_1, x_1] = cordinate[compare_route[num][i]]
+                                [y_2, x_2] = cordinate[compare_route[num][i + 1]]
+                                qp.drawLine(x_1, y_1, x_2, y_2)
+                            [y_1, x_1] = cordinate[compare_route[num][-1]]
+                            [y_2, x_2] = cordinate[compare_route[num][0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+                        elif solver == "PSO":
+                            Qpens[2] = QPen(QColor(29, 219, 22), 10)
+                            num = 2
+                            qp.setPen(Qpens[num])
+                            for i in range(len(compare_route[num]) - 1):
+                                [y_1, x_1] = cordinate[compare_route[num][i]]
+                                [y_2, x_2] = cordinate[compare_route[num][i + 1]]
+                                qp.drawLine(x_1, y_1, x_2, y_2)
+                            [y_1, x_1] = cordinate[compare_route[num][-1]]
+                            [y_2, x_2] = cordinate[compare_route[num][0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+                        elif solver == "ACO":
+                            Qpens[3] = QPen(QColor(0, 84, 225), 10)
+                            num = 3
+                            qp.setPen(Qpens[num])
+                            for i in range(len(compare_route[num]) - 1):
+                                [y_1, x_1] = cordinate[compare_route[num][i]]
+                                [y_2, x_2] = cordinate[compare_route[num][i + 1]]
+                                qp.drawLine(x_1, y_1, x_2, y_2)
+                            [y_1, x_1] = cordinate[compare_route[num][-1]]
+                            [y_2, x_2] = cordinate[compare_route[num][0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+                        elif solver == "DC":
+                            Qpens[4] = QPen(QColor(255, 0, 221), 10)
+                            num = 4
+                            qp.setPen(Qpens[num])
+                            for i in range(len(compare_route[num]) - 1):
+                                [y_1, x_1] = cordinate[compare_route[num][i]]
+                                [y_2, x_2] = cordinate[compare_route[num][i + 1]]
+                                qp.drawLine(x_1, y_1, x_2, y_2)
+                            [y_1, x_1] = cordinate[compare_route[num][-1]]
+                            [y_2, x_2] = cordinate[compare_route[num][0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+                        elif solver == "GREEDY":
+                            Qpens[5] = QPen(QColor(0, 216, 255), 10)
+                            num = 5
+                            qp.setPen(Qpens[num])
+                            for i in range(len(compare_route[num]) - 1):
+                                [y_1, x_1] = cordinate[compare_route[num][i]]
+                                [y_2, x_2] = cordinate[compare_route[num][i + 1]]
+                                qp.drawLine(x_1, y_1, x_2, y_2)
+                            [y_1, x_1] = cordinate[compare_route[num][-1]]
+                            [y_2, x_2] = cordinate[compare_route[num][0]]
+                            qp.drawLine(x_1, y_1, x_2, y_2)
+
+
+                #후보 경로들을 모두 시각화합니다. 비교대상으로 쓰이는 로봇을 더 눈에 뛰게 합니다.
+                [y, x] = robot_cordlist[self.sim_data['compare_robot_ind']]
+
+                brush = QBrush(QColor(29, 219, 22), style =Qt.Dense2Pattern)
+                qp.setBrush(brush)
+                qp.setPen(QPen(QColor(255, 0, 0), 2))
+                qp.drawRect(self.map_width / self.map_resolution * x, self.map_height / self.map_resolution_2 * y,
+                            self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
+
         qp.end()
 
 
@@ -301,8 +428,15 @@ class Widget_Simulator(QWidget):
         self.radioButton_GREEDY.clicked.connect(self.set_greedy)
         self.radioButton_notsp.clicked.connect(self.set_notsp)
 
+
         self.checkBox_viewRoute.stateChanged.connect(self.viewRoute)
         self.checkBox_viewFullRoute.stateChanged.connect(self.viewFullRoute)
+
+        self.checkBox_modecompare.stateChanged.connect(self.modeCompare)
+        self.is_mode_compare = False
+
+
+        self.label_lengthsay.hide()
         '''
         해야할 것.
         1. 맵에 대한 visualization을 해야함.(성공)
@@ -312,11 +446,28 @@ class Widget_Simulator(QWidget):
         - 문제점 : 과연 위젯 위에 draw가 될까? 
         2. 
         '''
+    def modeCompare(self):
+        if self.is_mode_compare:
+            self.is_mode_compare = False
+            self.image.is_mode_compare= False
+            self.label_lengthsay.hide()
+        else :
+            self.is_mode_compare = True
+            self.image.is_mode_compare = True
+            self.label_lengthsay.show()
+            if self.is_view_full_route:
+                self.checkBox_viewFullRoute.toggle()
+                self.is_view_full_route = False
+                self.image.is_view_full_route = False
+            if self.is_view_route:
+                self.checkBox_viewRoute.toggle()
+                self.is_view_route = False
+                self.image.is_view_route = False
+
     def closeEvent(self, QCloseEvent):
         self.sim_data['is_kill_robot_move'] = True
         time.sleep(0.3)
 
-        print("its done")
         self.sim_data["tsp_solver"] = "DC"
         self.order_data["is_start"] = False
         self.sim_data["is_start"] = False
@@ -328,7 +479,7 @@ class Widget_Simulator(QWidget):
         self.sim_data["packing_color"] = []
         self.sim_data["packing_point"] = []
         self.sim_data["robot_full_routes"] = []
-        self.sim_data["number_order"] = 0
+        self.sim_data['compare_robot_ind'] = 0
         self.order_data["is_set_order"] = False  # 선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
         self.order_data["is_set_initOrder"] = False  # 초기 주문들이 다 정해졋을때, 사용하는 변수
         self.sim_data["reset"] =True
@@ -414,9 +565,50 @@ class Widget_Simulator(QWidget):
         self.ui_info =ui_info
 
     def update_orders(self):
-        self.lineEdit_lastOrder.setText(str(self.sim_data["number_order"]))
+        a =self.order_data["len_order"]
+        self.lineEdit_lastOrder.setText(str(a))
+        self.update()
 
+    def paintEvent(self,e):
+        if self.is_mode_compare:
+            qp = QPainter()
+            qp.begin(self)
 
+            Qpens = [QPen(QColor(255, 0, 0), 2),
+                     QPen(QColor(255, 187, 0), 2),
+                     QPen(QColor(29, 219, 22), 2),
+                     QPen(QColor(0, 84, 225), 2),
+                     QPen(QColor(255, 0, 221), 2),
+                     QPen(QColor(0, 216, 255), 2)
+                     ]
+            length = self.sim_data["tsp_length"]
+            for i in range(6):
+                x = 0
+                y = 0
+                if i==0:
+                    x =self.groupBox_viewer.geometry().left()+self.radioButton_notsp.geometry().left()+90
+                    y =self.groupBox_viewer.geometry().top()+self.radioButton_notsp.geometry().top()+11
+                    # print("hi")
+                elif i ==1:
+                    x = self.groupBox_viewer.geometry().left()+self.radioButton_GA.geometry().left()+90
+                    y = self.groupBox_viewer.geometry().top()+self.radioButton_GA.geometry().top()+11
+                elif i ==2:
+                    x = self.groupBox_viewer.geometry().left()+self.radioButton_PSO.geometry().left()+90
+                    y = self.groupBox_viewer.geometry().top()+self.radioButton_PSO.geometry().top()+11
+                elif i==3:
+                    x = self.groupBox_viewer.geometry().left()+self.radioButton_ACO.geometry().left()+90
+                    y = self.groupBox_viewer.geometry().top()+self.radioButton_ACO.geometry().top()+11
+                elif i==4:
+                    x = self.groupBox_viewer.geometry().left()+self.radioButton_DC.geometry().left()+90
+                    y = self.groupBox_viewer.geometry().top()+self.radioButton_DC.geometry().top()+11
+                elif i==5:
+                    x = self.groupBox_viewer.geometry().left()+self.radioButton_GREEDY.geometry().left()+90
+                    y = self.groupBox_viewer.geometry().top()+self.radioButton_GREEDY.geometry().top()+11
+                qp.setPen(Qpens[i])
+                qp.setFont(QFont('Arial', 9))
+                qp.drawText(x,y,str(math.ceil(length[i])))
+
+            qp.end()
 
     def setSimInfo(self,sim_data):
 
@@ -441,5 +633,5 @@ class Widget_Simulator(QWidget):
 
         self.image.show()
         self.image.update()#맵을 그립니다.
-        self.timer.start(300)
+        self.timer.start(100)
 

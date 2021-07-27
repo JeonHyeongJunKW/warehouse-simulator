@@ -46,7 +46,7 @@ class DivideConquer:
             return graph_2
 
         min_cost = math.inf
-        #print(graph_1)
+        # print(graph_1)
         for edge_1_id, (point_0, point_1) in enumerate(graph_1):
             for edge_2_id, (point_2, point_3) in enumerate(graph_2):
                 cost = self.distance[point_0][point_2] + self.distance[point_1][point_3] - self.distance[point_0][point_1] - self.distance[point_1][point_2]
