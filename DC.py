@@ -1,5 +1,6 @@
 import math
 import time
+import numpy as np
 
 class DivideConquer:
     def __init__(self, points, distance, cordinate):
@@ -40,7 +41,7 @@ class DivideConquer:
             return points_by_y[:middle], points_by_y[middle:]
 
     def merge(self, graph_1, graph_2):
-        if isinstance(graph_1, int):
+        if isinstance(graph_1, int) or isinstance(graph_1, np.int32):
             graph_2.append((graph_1, graph_2[0][0]))
             graph_2.append((graph_1, graph_2[0][1]))
             return graph_2
