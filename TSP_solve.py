@@ -50,18 +50,18 @@ def get_length(refined_orders, distance_cost):
     lengths = []
     cumul_lenths =[]
     for i in range(len(refined_orders)-1):
-        full_length += math.sqrt(distance_cost[refined_orders[i]][refined_orders[i+1]])
+        full_length += distance_cost[refined_orders[i]][refined_orders[i+1]]
         cumul_lenths.append(full_length)
-        lengths.append(math.sqrt(distance_cost[refined_orders[i]][refined_orders[i+1]]))
-    full_length+=math.sqrt(distance_cost[refined_orders[-1]][refined_orders[0]])
-    lengths.append(math.sqrt(distance_cost[refined_orders[-1]][refined_orders[0]]))
+        lengths.append(distance_cost[refined_orders[i]][refined_orders[i+1]])
+    full_length+=distance_cost[refined_orders[-1]][refined_orders[0]]
+    lengths.append(distance_cost[refined_orders[-1]][refined_orders[0]])
     cumul_lenths.append(full_length)
 
     # print(lengths)
     # print(cumul_lenths)
     return full_length
 
-def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,shelf_size,real_cordinate,already_answer):
+def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,shelf_size,real_cordinate,already_answer,duration):
     used_packing_point = shelf_size+ (packing_point-20001)
     # print(packing_point, orders)
     refined_orders = [order-1 for order in orders]
@@ -76,6 +76,7 @@ def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,s
     all_length = []
     all_time = []
     return_orders = []
+
     all_route.append(refined_orders)
     all_length.append(get_length(all_route[0], distance_cost))
     all_time.append(0)
@@ -85,30 +86,39 @@ def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,s
         refined_orders_pre = [used_packing_point] + refined_orders_pre
         all_route.append(refined_orders_pre)
         all_length.append(get_length(all_route[1], distance_cost))
+        all_time.append(duration)
     else:
+        start = time.time()
         refined_orders_2 = gen.get_path(refined_orders, distance_cost)
+        end = time.time()
         all_route.append(refined_orders_2)
         all_length.append(get_length(all_route[1], distance_cost))
-        all_time.append(0)
+        all_time.append(end - start)
     #PSO
-    start = time.time()
+
     if tsp_solve_way == "PSO":
+
         refined_orders_pre = [order - 1 for order in already_answer]
         refined_orders_pre = [used_packing_point] + refined_orders_pre
         all_route.append(refined_orders_pre)
         all_length.append(get_length(all_route[2], distance_cost))
+        all_time.append(duration)
+
     else:
+        start = time.time()
         refined_orders_3 = tsp_pso(refined_orders, distance_cost)
         all_route.append(refined_orders_3)
         all_length.append(get_length(all_route[2], distance_cost))
-    end = time.time()
-    all_time.append(end - start)
+        end = time.time()
+        all_time.append(end - start)
+
     #ACO
     if tsp_solve_way == "ACO":
         refined_orders_pre = [order - 1 for order in already_answer]
         refined_orders_pre = [used_packing_point] + refined_orders_pre
         all_route.append(refined_orders_pre)
         all_length.append(get_length(all_route[3], distance_cost))
+        all_time.append(duration)
     else:
         start = time.time()
         refined_orders_4 = ACO.get_path(refined_orders, distance_cost)
@@ -122,6 +132,7 @@ def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,s
         refined_orders_pre = [used_packing_point] + refined_orders_pre
         all_route.append(refined_orders_pre)
         all_length.append(get_length(all_route[4], distance_cost))
+        all_time.append(duration)
     else:
         start = time.time()
         refined_orders_5 = tsp_dc(refined_orders, distance_cost,real_cordinate)
@@ -148,6 +159,6 @@ def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,s
     #각 알고리즘별 시간과 거리
 
     # print("length", all_length)
-    # print("time", all_time)
+    print("time", all_time)
 
     return all_route, all_length, all_time

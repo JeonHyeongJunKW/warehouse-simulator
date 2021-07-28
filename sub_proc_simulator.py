@@ -378,7 +378,7 @@ def warehouse_tsp_solver(sim_data,order_data):
                     j_pos_x = saved_shelf_point[j][0] - init_map_x
                     j_pos_y = saved_shelf_point[j][1] - init_map_y
                     j_pos = [j_pos_x, j_pos_y]
-                distance_cost[i][j] = (i_pos[0]-j_pos[0])*(i_pos[0]-j_pos[0]) +(i_pos[1]-j_pos[1])*(i_pos[1]-j_pos[1])
+                distance_cost[i][j] = math.sqrt((i_pos[0]-j_pos[0])*(i_pos[0]-j_pos[0]) +(i_pos[1]-j_pos[1])*(i_pos[1]-j_pos[1]))
 
         sim_data["real_cordinate"] = real_cordinate
 
@@ -465,15 +465,23 @@ def warehouse_tsp_solver(sim_data,order_data):
                         new_order = new_order + small_order
                     new_order_2 = list(set(new_order))
                     solver_method =sim_data["tsp_solver"]
+                    duration = 0
+                    new_start = 0
+                    if robot_ind == sim_data['compare_robot_ind']:
+                        new_start = time.time()
                     solved_order = solve_tsp(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate)
                     if robot_ind == sim_data['compare_robot_ind']:
-                        all_route,all_length, all_time = solve_tsp_all_algorithm(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate,solved_order)
+                        duration = time.time() - new_start
+                    if robot_ind == sim_data['compare_robot_ind']:
+                        all_route,all_length, all_time = solve_tsp_all_algorithm(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate,solved_order,duration)
                         sim_data["tsp_length"] = all_length
                         sim_data['compare_route'] = all_route
+                        sim_data['compare_time'] = all_time
                         sim_data["compare_tsp_solver"] = sim_data["tsp_solver"]
                     '''
                     로봇에게 업무할당간에 전처리
                     '''
+
                     part_shelf_grid = []
                     for shelf_grid in solved_order:
                         part_shelf_grid.append(shelf_grid_list[shelf_grid-1])

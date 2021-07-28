@@ -165,6 +165,7 @@ if __name__ == "__main__":
         sim_data['compare_route'] = []
         sim_data["compare_tsp_solver"] = "ACO"
         sim_data["tsp_length"] = [1000,1000,1000,1000,1000,1000]
+        sim_data['compare_time'] = [0,0,0,0,0,0]
         order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
         order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
         order_data["len_order"] =0
