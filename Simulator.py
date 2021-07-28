@@ -437,6 +437,7 @@ class Widget_Simulator(QWidget):
 
 
         self.label_lengthsay.hide()
+        self.label_timesay.hide()
         '''
         해야할 것.
         1. 맵에 대한 visualization을 해야함.(성공)
@@ -451,10 +452,12 @@ class Widget_Simulator(QWidget):
             self.is_mode_compare = False
             self.image.is_mode_compare= False
             self.label_lengthsay.hide()
+            self.label_timesay.hide()
         else :
             self.is_mode_compare = True
             self.image.is_mode_compare = True
             self.label_lengthsay.show()
+            self.label_timesay.show()
             if self.is_view_full_route:
                 self.checkBox_viewFullRoute.toggle()
                 self.is_view_full_route = False
@@ -582,6 +585,7 @@ class Widget_Simulator(QWidget):
                      QPen(QColor(0, 216, 255), 2)
                      ]
             length = self.sim_data["tsp_length"]
+            compare_time = self.sim_data["compare_time"]
             for i in range(6):
                 x = 0
                 y = 0
@@ -607,6 +611,7 @@ class Widget_Simulator(QWidget):
                 qp.setPen(Qpens[i])
                 qp.setFont(QFont('Arial', 9))
                 qp.drawText(x,y,str(math.ceil(length[i])))
+                qp.drawText(x+70, y, str(math.ceil(compare_time[i]*1000)/1000))
 
             qp.end()
 

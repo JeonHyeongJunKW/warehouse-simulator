@@ -19,7 +19,7 @@ def get_path(refined_orders,distance_cost):
     heuristic_map = np.zeros((map_size, map_size))
     for i in range(map_size):
         for j in range(map_size):
-            heuristic_map[i, j] = math.sqrt(distance_cost[refined_orders[i]][refined_orders[j]])
+            heuristic_map[i, j] = distance_cost[refined_orders[i]][refined_orders[j]]
     # 페로몬 맵을 생성합니다.
     pheromone_map = np.ones((map_size, map_size))
     pheromone_map[np.eye(map_size) == 1] = 0
@@ -127,6 +127,3 @@ def get_path(refined_orders,distance_cost):
             break
     return best_path[0:-1]
 
-
-if __name__ == '__main__':
-    TSP_ant_colony_elit(40,300)
