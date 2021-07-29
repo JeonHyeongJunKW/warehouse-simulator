@@ -1,5 +1,8 @@
 import math
 import time
+import TSP_solve
+import numpy as np
+
 
 class DivideConquer:
     def __init__(self, points, distance, cordinate):
@@ -24,6 +27,7 @@ class DivideConquer:
             div_1, div_2 = self.split_points(points)
             graph_1 = self.solve(div_1)
             graph_2 = self.solve(div_2)
+            #print("graph = ", type(graph_1))
             merge = self.merge(graph_1, graph_2)
 
             return merge
@@ -40,7 +44,7 @@ class DivideConquer:
             return points_by_y[:middle], points_by_y[middle:]
 
     def merge(self, graph_1, graph_2):
-        if isinstance(graph_1, int):
+        if isinstance(graph_1, int) or isinstance(graph_1, np.int32):
             graph_2.append((graph_1, graph_2[0][0]))
             graph_2.append((graph_1, graph_2[0][1]))
             return graph_2
@@ -77,30 +81,44 @@ class DivideConquer:
 
 
 def tsp_dc(index, distance, cordinate):
+    path = index[:]
+    iteration = 1
 
-    divide_process = DivideConquer(index, distance, cordinate)
-    path = divide_process.run()
+    for i in range(iteration):
+        #print(i, path)
+        divide_process = DivideConquer(path, distance, cordinate)
+        path = divide_process.run()
 
-    path_index = [index[0]]
-    route_check = True
-    while route_check:
+        path_index = [index[0]]
+        route_check = True
+        while route_check:
 
-        for num, edge in enumerate(path):
-            if edge[0] == path_index[-1]:
-                path_index.append(edge[1])
-                del path[num]
-                continue
-            elif edge[1] == path_index[-1]:
-                path_index.append(edge[0])
-                del path[num]
-                continue
-        if not path:
-            del path_index[-1]
-            route_check = False
+            for num, edge in enumerate(path):
+                if edge[0] == path_index[-1]:
+                    path_index.append(edge[1])
+                    del path[num]
+                    continue
+                elif edge[1] == path_index[-1]:
+                    path_index.append(edge[0])
+                    del path[num]
+                    continue
+            if not path:
+                del path_index[-1]
+                path = path_index
+                route_check = False
 
     return path_index
 
+'''
+    length = 0
+    for i in range(len(path_index)-1):
+        length += math.sqrt(distance[path_index[i]][path_index[i+1]])
+    length += math.sqrt(distance[path_index[0]][path_index[-1]])
+    #print("length in DC = ", length)
 
+    test_length = TSP_solve.get_length(path_index, distance)
+    #print("length_tsp in DC = ", test_length)
+'''
 
 
 

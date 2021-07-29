@@ -1,6 +1,7 @@
 from operator import attrgetter
 import random, sys, time, copy
 import numpy as np
+import NN
 
 
 # class that represents a graph
@@ -16,8 +17,6 @@ class Graph:
         # checks if the edge already exists
         if not self.existsEdge(src, dest):
             self.edges[(src, dest)] = cost
-            #self.vertices.add(src)
-            #self.vertices.add(dest)
 
     # checks if exists a edge linking "src" in "dest"
     def existsEdge(self, src, dest):
@@ -140,7 +139,7 @@ class Particle:
 # PSO algorithm
 class PSO:
 
-    def __init__(self, graph, iterations, size_population, beta=1, alfa=1):
+    def __init__(self, graph, iterations, init_greedy, size_population, beta=1, alfa=1):
         self.graph = graph  # the graph
         self.iterations = iterations  # max of iterations
         self.size_population = size_population  # size population
@@ -150,6 +149,10 @@ class PSO:
 
         # initialized with a group of random particles (solutions)
         solutions = self.graph.getRandomPaths(self.size_population)
+        for i in range(2):
+            solutions.append(init_greedy)
+
+
         # checks if exists any solution
         if not solutions:
             print('Initial population empty! Try run the algorithm again...')
@@ -173,14 +176,6 @@ class PSO:
     def getGBest(self):
         return self.gbest
 
-    # shows the info of the particles
-    def showsParticles(self):
-
-        for particle in self.particles:
-            print('pbest: %s\t|\tcost pbest: %d\t|\tcurrent solution: %s\t|\tcost current solution: %d' \
-                  % (str(particle.getPBest()), particle.getCostPBest(), str(particle.getCurrentSolution()),
-                     particle.getCostCurrentSolution()))
-
     def run(self):
 
         # for each time step (iteration)
@@ -190,7 +185,7 @@ class PSO:
             self.gbest = min(self.particles, key=attrgetter('cost_pbest_solution'))
 
             # for each particle in the swarm
-            for particle in self.particles:
+            for check, particle in enumerate(self.particles):
 
                 particle.clearVelocity()  # cleans the speed of the particle
                 temp_velocity = []
@@ -245,53 +240,38 @@ class PSO:
                 cost_current_solution = self.graph.getCostPath(solution_particle)
                 # updates the cost of the current solution
                 particle.setCostCurrentSolution(cost_current_solution)
-
                 # checks if current solution is pbest solution
+
                 if cost_current_solution < particle.getCostPBest():
-                    particle.setPBest(solution_particle)
-                    particle.setCostPBest(cost_current_solution)
-
-
-def check_double(nodes):
-
-    new_list = []
-    double_list = []
-
-    for v in nodes:
-        if v not in new_list:
-            new_list.append(v)
-        else:
-            double_list.append(v)
-    vertex_num = len(new_list)
-
-    return vertex_num
+                        particle.setPBest(solution_particle)
+                        particle.setCostPBest(cost_current_solution)
 
 
 def tsp_pso(pso_path, pso_cost):
     # creates the Graph instance
     node_num = len(pso_path)
-    #print(node_num,"path = ",pso_path)
     start_node = pso_path[0]
-    #print(start_node)
-    pso_path = np.array(pso_path)
-    pso_cost = np.array(pso_cost)
+    path = np.array(pso_path)
+    cost = np.array(pso_cost)
 
 
-    graph = Graph(vertices=pso_path, amount_vertices=node_num)
+    graph = Graph(vertices=path, amount_vertices=node_num)
 
     for i in range(node_num):
         for j in range(node_num):
              if i != j:
-                  #graph.addEdge(int(pso_path[i]), int(pso_path[j]), int(pso_cost(pso_path[i], pso_path[j])))
-                  first, second, check_cost = pso_path[i], pso_path[j], pso_cost[pso_path[i], pso_path[j]]
+                  first, second, check_cost = pso_path[i], pso_path[j], cost[pso_path[i]][pso_path[j]]
                   graph.addEdge(first, second, check_cost)
+
     # This graph is in the folder "images" of the repository.
+    Greedy = NN.tsp_nn(pso_path, pso_cost)
 
     # creates a PSO instance
-    pso = PSO(graph, iterations=100, size_population=10, beta=1, alfa=0.9)
+    pso = PSO(graph, iterations=1000, init_greedy=Greedy, size_population=100, beta=0.02, alfa=0.9)
     pso.run()  # runs the PSO algorithm
-    #print(pso.getGBest().getPBest())
+
     best_route = pso.getGBest().getPBest()
+
     check = 1
     while check:
         if best_route[0] != start_node:
@@ -300,11 +280,7 @@ def tsp_pso(pso_path, pso_cost):
             best_route.append(num)
         else:
             check = 0
-    #print("Done")
-    #print(best_route)
+
     return best_route
 
-    #pso.showsParticles()  # shows the particles
 
-    # shows the global best particle
-    #print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
