@@ -119,7 +119,7 @@ def get_path(refined_orders,distance_cost):
         sum_map = pheromone_map * (1 - w_elit) + elit_map * w_elit
 
         no_change +=1
-        if no_change >20:
+        if no_change >5:
             break
         evap_count += 1
         cur_it += 1

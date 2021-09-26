@@ -159,6 +159,6 @@ def solve_tsp_all_algorithm(orders, packing_point, tsp_solve_way,distance_cost,s
     #각 알고리즘별 시간과 거리
 
     # print("length", all_length)
-    print("time", all_time)
+    # print("time", all_time)
 
     return all_route, all_length, all_time

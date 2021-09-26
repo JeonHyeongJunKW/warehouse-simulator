@@ -4,6 +4,7 @@ import math
 from TSP_solve import *
 import os
 from Astar import *
+import copy
 from multiprocessing import Process, Manager
 
 class warehouse_Robot:
@@ -26,6 +27,11 @@ class warehouse_Robot:
         #Astar를 추가하였습니다.
         self.astar_route = []
         self.astar_ind = 0
+
+
+        ## 시물레이션 비교를 위해서 추가한 코드입니다.
+        self.route_step =0#한 시물레이션동안에 알고리즘에 대한 이동시간
+        self.algorithm_time = 0#한 시물레이션동안에 알고리즘수행시간
 
     def move(self):
         if self.is_work:
@@ -105,7 +111,7 @@ class warehouse_Robot:
             #현재 경로를 갱신하는부분
             self.current_point[0] = next_pos[0]
             self.current_point[1] = next_pos[1]
-
+            self.route_step +=1
             if find_goal:# 골에 도착했다면 목표위치를 바꾼다.
                 if self.chanage_goal_astar():
                     self.is_work = False
@@ -260,6 +266,14 @@ def getbrightColorSet(color_num):
 
 def robot_mover(robot_data,sim_data):
     move_ind = 0
+    '''
+    robot_data['robot'] =robots
+    robot_data['step'] =[0 for _ in range(len(robot_data['robot']))]
+    robot_data['is_work'] = [False for _ in range(len(robot_data['robot']))]
+    robot_data['path'] = [[] for _ in range(len(robot_data['robot']))]
+    '''
+    shelf_grid_list =robot_data['shelf_grid_list']
+    occupy_map= robot_data['occupy_map']
     while True:
         start = time.time()
         # 로봇의 위치를 공유변수에 저장합니다.
@@ -278,13 +292,39 @@ def robot_mover(robot_data,sim_data):
             routes.append(ro.route)
         for robot_ind in range(len(robot_list)):
             robot = robot_list[robot_ind]
+            if robot_data['is_work'][robot_ind] and not robot.is_work:
+                robot.is_work = True
+                solved_order =copy.copy(robot_data['path'][robot_ind])
+                part_shelf_grid = []
+
+                for shelf_grid in solved_order:
+                    part_shelf_grid.append(shelf_grid_list[shelf_grid - 1])
+                temp_path = copy.deepcopy(robot_data['path'])
+                temp_path[robot_ind] = solved_order
+                robot_data['path'] = temp_path
+
+                robot.assign_work_astar(solved_order, part_shelf_grid, occupy_map)
+                # print(solved_order)
             if robot.is_work:
+                robot_step = copy.copy(robot_data['step'])
+                robot_step[robot_ind] +=1
+                # print(robot_step[robot_ind])
+                robot_data['step'] =copy.copy(robot_step)
+
                 robot.astar_move()
+                if not robot.is_work:
+                    temp = copy.deepcopy(robot_data['is_work'])
+                    temp[robot_ind] = False
+                    robot_data['is_work'] = copy.deepcopy(temp)
+                    sim_data["doing_order"]+=1
                 goal_cordinates.append(robot.goal_point)
                 shelf_node.append(robot.picking_point)
                 robot_routes.append(robot.route)
                 robot_full_routes.append(robot.full_route)
                 robot_list[robot_ind] = robot
+            else :
+                robot_routes.append([])
+                robot_full_routes.append([])
             robot_cordinates.append(robot.current_point)
         routes = []
         for ro in robot_list:
@@ -313,6 +353,8 @@ def warehouse_tsp_solver(sim_data,order_data):
         #로봇 셋팅
         robot_cap = order_data['sim_data'][3]
         robot_number = order_data['sim_data'][4]
+        initOrder = order_data['sim_data'][1]
+        sim_data["sim_info_ronum_rocap_initorder"] = [robot_number, robot_cap, initOrder]
 
         #ui로 인해서 마우스 좌표가 잘못되는거 보정
         init_map_x = ui_info[0]
@@ -384,6 +426,7 @@ def warehouse_tsp_solver(sim_data,order_data):
 
         #패킹지점별 고유 색깔을 지정받는다.
         sim_data["packing_color"] = getColorSet(len(saved_pk_point))
+
         sim_data["route_color"] = getbrightColorSet(len(saved_pk_point))
         sim_data["packing_point"] = map_data['pack_point']
         #로봇의 위치를 세팅한다.
@@ -402,11 +445,7 @@ def warehouse_tsp_solver(sim_data,order_data):
             robot = warehouse_Robot(capacity=robot_cap,packing_station=packing_point,packing_station_ind=packing_ind+20001,current_point=current_pose)
 
             robots.append(robot)
-        robot_data = Manager().dict()
-        robot_data['robot'] =robots
-        sim_data["packing_ind"] = robot_ind
-        #선반이 차지하는 격자맵을 얻습니다.
-        shelf_grid_list =[]
+        shelf_grid_list = []
         for ind, point in enumerate(saved_shelf_point):
             if point[2] == 0 or point[2] == 180:
                 lefttop = [point[0] - int(point[3] / 2),
@@ -428,8 +467,19 @@ def warehouse_tsp_solver(sim_data,order_data):
             grid_list = []
             for i in range(small_y_index, big_y_index):
                 for j in range(small_x_index, big_x_index):
-                    grid_list.append([i,j])
+                    grid_list.append([i, j])
             shelf_grid_list.append(grid_list)
+
+        robot_data = Manager().dict()
+        robot_data['robot'] =robots
+        robot_data['step'] =[0 for _ in range(len(robot_data['robot']))]
+        robot_data['is_work'] = [False for _ in range(len(robot_data['robot']))]
+        robot_data['path'] = [[] for _ in range(len(robot_data['robot']))]
+        robot_data['shelf_grid_list'] = shelf_grid_list
+        robot_data['occupy_map'] =occupy_map
+        sim_data["packing_ind"] = robot_ind
+        #선반이 차지하는 격자맵을 얻습니다.
+
 
         order_data["is_set_order"] =True
 
@@ -440,23 +490,30 @@ def warehouse_tsp_solver(sim_data,order_data):
         robot_move = Process(target=robot_mover, args=(robot_data, sim_data))
         robot_move.start()
         sim_data['is_kill_robot_move'] = False
+        algorithm_start_time =time.time()
+        one_sim_time = [0 for _ in range(robot_number)]
+
         while True :
-            robots = robot_data['robot']
+            robots = copy.deepcopy(robot_data['robot'])#로봇에 대한 정보를 담은 벡터를 가져온다. 어차피 full 수행시간을 구할때는 그다지 신경안써도 될듯
             for robot_ind in range(len(robots)):
                 if sim_data["reset"] :
                     break
                 if sim_data['is_kill_robot_move']:
                     robot_move.kill()
-                if not robots[robot_ind].is_work:
-                    robot = robots[robot_ind]
-                    if len(order_data["orders"]) < 100:
-                        print("too small ordrers")
-                        break
+                if not robot_data['is_work'][robot_ind]:
+                    robot = copy.deepcopy(robots[robot_ind])
+                    last_worker = False
+                    for robot_work in robot_data['is_work']:
+                        if robot_work:
+                            last_worker = True
+
+                    if len(order_data["orders"]) < 1:
+                        continue
                     '''
                     할당 FIFO
                     '''
-                    order = order_data["orders"][:robot.capcity]
-                    order_data["orders"] = order_data["orders"][robot.capcity:]
+                    order = copy.deepcopy(order_data["orders"][:robot.capcity])#capacity *5의 양으로 하고있구나..
+                    order_data["orders"] = copy.deepcopy(order_data["orders"][robot.capcity:])
                     '''
                     경로생성 
                     '''
@@ -465,13 +522,10 @@ def warehouse_tsp_solver(sim_data,order_data):
                         new_order = new_order + small_order
                     new_order_2 = list(set(new_order))
                     solver_method =sim_data["tsp_solver"]
-                    duration = 0
-                    new_start = 0
-                    if robot_ind == sim_data['compare_robot_ind']:
-                        new_start = time.time()
+                    new_start = time.time()
                     solved_order = solve_tsp(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate)
-                    if robot_ind == sim_data['compare_robot_ind']:
-                        duration = time.time() - new_start
+                    duration = time.time() - new_start
+                    one_sim_time[robot_ind] +=duration
                     if robot_ind == sim_data['compare_robot_ind']:
                         all_route,all_length, all_time = solve_tsp_all_algorithm(new_order_2,robot.packing_station_ind,solver_method,distance_cost,shelf_size,real_cordinate,solved_order,duration)
                         sim_data["tsp_length"] = all_length
@@ -479,24 +533,19 @@ def warehouse_tsp_solver(sim_data,order_data):
                         sim_data['compare_time'] = all_time
                         sim_data["compare_tsp_solver"] = sim_data["tsp_solver"]
                     '''
-                    로봇에게 업무할당간에 전처리
+                    로봇을 work로 전환
                     '''
 
-                    part_shelf_grid = []
-                    for shelf_grid in solved_order:
-                        part_shelf_grid.append(shelf_grid_list[shelf_grid-1])
-                    robot.assign_work_astar(solved_order,part_shelf_grid,occupy_map)
+                    temp = copy.deepcopy(robot_data['path'])
+                    temp[robot_ind] = solved_order
+                    robot_data['path'] = copy.deepcopy(temp)
+                    temp = copy.deepcopy(robot_data['is_work'])
+                    temp[robot_ind] = True
+                    robot_data['is_work'] = copy.deepcopy(temp)
 
-                    robots = robot_data['robot']
-                    robots[robot_ind] = robot
-                    robot_data['robot'] = robots
-                    # 로봇을 이동시킵니다.
+
             if sim_data["reset"]:
                 break
-
-
-
-
 
 
 def warehouse_order_maker(order_info, no_use):
@@ -508,8 +557,8 @@ def warehouse_order_maker(order_info, no_use):
         # print("order maker",os.getpid())
 
         initOrder = order_info['sim_data'][1]
-        order_rate = order_info['sim_data'][2]
-
+        # order_rate = order_info['sim_data'][2]
+        order_rate = 0#증가율을 0으로 만들어버립니다.
         '''
         기본 order들을 생성합니다. 
         선반의 개수에 맞춰서 생성합니다. 
@@ -518,7 +567,8 @@ def warehouse_order_maker(order_info, no_use):
             pass
         kind = order_info['order_kind']
         # order_info["orders"] = [random.choice(list(range(1,kind+1))) for i in range(initOrder)]
-        order_info["orders"] = [list(set([random.choice(list(range(1, kind + 1))) for i in range(5)])) for i in range(initOrder)]
+        random.seed(10)
+        order_info["orders"] = [list(set([random.choice(list(range(1, kind + 1))) for _ in range(5)])) for __ in range(initOrder)]
         order_info["is_set_initOrder"] = True
         while True:
             if order_info["reset"]:
@@ -529,4 +579,4 @@ def warehouse_order_maker(order_info, no_use):
             #order를 2차원배열의 형태로 추가합니다.
             new_order = [list(set([random.choice(list(range(1,kind+1))) for i in range(5)])) for i in range(order_rate)]
             order_info["orders"] = order_info["orders"] + new_order
-            order_info["len_order"] = len(order_info["orders"])
+

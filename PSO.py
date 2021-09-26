@@ -146,7 +146,8 @@ class PSO:
         self.particles = []  # list of particles
         self.beta = beta  # the probability that all swap operators in swap sequence (gbest - x(t-1))
         self.alfa = alfa  # the probability that all swap operators in swap sequence (pbest - x(t-1))
-
+        self.pre_best = 0
+        self.count = 0
         # initialized with a group of random particles (solutions)
         solutions = self.graph.getRandomPaths(self.size_population)
         for i in range(2):
@@ -183,7 +184,13 @@ class PSO:
 
             # updates gbest (best particle of the population)
             self.gbest = min(self.particles, key=attrgetter('cost_pbest_solution'))
-
+            if self.pre_best == self.gbest:
+                self.count += 1
+                if self.count > 4:
+                    return 0
+            else:
+                self.pre_best = copy.copy(self.gbest)
+                self.count = 0
             # for each particle in the swarm
             for check, particle in enumerate(self.particles):
 
@@ -267,7 +274,7 @@ def tsp_pso(pso_path, pso_cost):
     Greedy = NN.tsp_nn(pso_path, pso_cost)
 
     # creates a PSO instance
-    pso = PSO(graph, iterations=1000, init_greedy=Greedy, size_population=100, beta=0.02, alfa=0.9)
+    pso = PSO(graph, iterations=500, init_greedy=Greedy, size_population=50, beta=0.02, alfa=0.9)
     pso.run()  # runs the PSO algorithm
 
     best_route = pso.getGBest().getPBest()

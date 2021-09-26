@@ -5,6 +5,9 @@ from PyQt5.QtCore import *
 import math
 import json
 import time
+from PDFmake import *
+import matplotlib.pyplot as plt
+import copy
 
 class Simulator(QLabel):
     def __init__(self, *args, **kwargs):
@@ -31,6 +34,9 @@ class Simulator(QLabel):
         self.res_width = self.map_width / self.map_resolution
         self.res_heigth = self.map_height / self.map_resolution_2
 
+
+
+
     def setMapImage(self,image_name):
         self.qPixmapVar = QPixmap("./sim/"+image_name)
         self.draw_image = True
@@ -41,7 +47,6 @@ class Simulator(QLabel):
         if self.draw_image:
             qp.drawPixmap(self.rect(),self.qPixmapVar)
         if self.sim_data:
-
             robot_cordlist =self.sim_data["robot_cordinates"]
             robot_shelf = self.sim_data["shelf_node"]
             goal_cordinates = self.sim_data["goal_cordinates"]
@@ -56,7 +61,6 @@ class Simulator(QLabel):
                 qp.drawRect(self.map_width/self.map_resolution *x, self.map_height/self.map_resolution_2 *y, self.map_width/self.map_resolution, self.map_height/self.map_resolution_2)
             init_x = self.ui_info[0]
             init_y = self.ui_info[1]
-
             if self.is_view_shelf:
                 for i, ind_list in enumerate(robot_shelf):
                     qp.setBrush(QColor(255, 187, 0))
@@ -88,12 +92,9 @@ class Simulator(QLabel):
                                 lefttop_x = self.res_width * j
                                 lefttop_y = self.res_heigth * i
                                 qp.drawRect(lefttop_x, lefttop_y, self.res_width, self.res_heigth)
-
-
             if self.is_view_full_route:
                 init_x = self.ui_info[0]
                 init_y = self.ui_info[1]
-
 
                 for j, points in enumerate(robot_full_routes):
                     color = packing_color[self.sim_data['packing_ind'][j]]
@@ -128,8 +129,10 @@ class Simulator(QLabel):
             for i, [y, x] in enumerate(goal_cordinates):
                 qp.setBrush(QColor(255, 0, 0))
 
-                qp.drawRect(self.map_width / self.map_resolution * x,self.map_height / self.map_resolution_2 * y,self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
-
+                qp.drawRect(self.map_width / self.map_resolution * x,
+                            self.map_height / self.map_resolution_2 * y,
+                            self.map_width / self.map_resolution,
+                            self.map_height / self.map_resolution_2)
             for i, [x,y] in enumerate(packing_point):
                 color = packing_color[i]
                 qp.setBrush(QColor(color[0], color[1], color[2]))
@@ -139,6 +142,7 @@ class Simulator(QLabel):
                 small_y_index = self.res_heigth * small_y_index
                 qp.drawRect(small_x_index, small_y_index,
                             self.map_width / self.map_resolution, self.map_height / self.map_resolution_2)
+
             if self.is_mode_compare:
                 # 각 알고리즘별 경로를 그립니다.
                 if len(compare_route) ==6:
@@ -190,6 +194,7 @@ class Simulator(QLabel):
                             qp.drawLine(x_1, y_1, x_2, y_2)
 
                         solver = self.sim_data["tsp_solver"]
+
                         if solver == "NO_TSP":
                             Qpens[0] = QPen(QColor(255, 0, 0), 10)
                             num =0
@@ -414,12 +419,13 @@ class Widget_Simulator(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         uic.loadUi("Simulator.ui",self)
+
         self.is_view_shelf = False
         self.is_view_route =False
         self.is_view_full_route = False
         self.checkBox_viewAllShelf.stateChanged.connect(self.viewShelf)
         self.timer = QTimer(self)
-        self.tsp_mode = "ACO"
+
         self.timer.timeout.connect(self.update_orders)
         self.radioButton_ACO.clicked.connect(self.set_aco)
         self.radioButton_GA.clicked.connect(self.set_ga)
@@ -434,10 +440,10 @@ class Widget_Simulator(QWidget):
 
         self.checkBox_modecompare.stateChanged.connect(self.modeCompare)
         self.is_mode_compare = False
-
-
+        self.tsp_mode = "NO_TSP"
         self.label_lengthsay.hide()
         self.label_timesay.hide()
+        self.image = Simulator(self)
         '''
         해야할 것.
         1. 맵에 대한 visualization을 해야함.(성공)
@@ -487,6 +493,9 @@ class Widget_Simulator(QWidget):
         self.order_data["is_set_initOrder"] = False  # 초기 주문들이 다 정해졋을때, 사용하는 변수
         self.sim_data["reset"] =True
         self.order_data["reset"] = True
+        self.sim_data["doing_order"] =0
+        self.image.timer.stop()
+        self.timer.stop()
 
 
 
@@ -568,7 +577,7 @@ class Widget_Simulator(QWidget):
         self.ui_info =ui_info
 
     def update_orders(self):
-        a =self.order_data["len_order"]
+        a =self.order_data['sim_data'][1] - self.sim_data["doing_order"]
         self.lineEdit_lastOrder.setText(str(a))
         self.update()
 
@@ -625,6 +634,7 @@ class Widget_Simulator(QWidget):
     def set_shared_data(self,sim_data):
         self.sim_shared_data = sim_data
 
+
     def start_setting(self):
         self.image = Simulator(self)
         self.image.setMapImage(self.map_name)#self.map_name의 이미지를 다운로드해서 그립니다.
@@ -640,3 +650,231 @@ class Widget_Simulator(QWidget):
         self.image.update()#맵을 그립니다.
         self.timer.start(100)
 
+
+####위에는 visualize가되어 있는 코드입니다.
+class sim_viwer(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        uic.loadUi("simulation_result_viewer.ui", self)
+        self.pushButton_viewresult.clicked.connect(self.startreal_sim)
+        self.simulator = Widget_Simulator()
+        self.simulator.hide()
+        self.sim_data = None
+        self.order_data = None
+    def startreal_sim(self):
+        if self.simulator :
+            del self.simulator#시물레이터를 삭제합니다.
+        self.simulator = Widget_Simulator()
+        self.order_data["reset"] = True  # order 생성을 리셋합니다.
+        self.order_data["is_set_order"] = False  # 선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
+        self.order_data["is_set_initOrder"] = False  # 초기 주문들이 다 정해졋을때, 사용하는 변수
+        self.order_data['is_start'] = True
+        self.sim_data['is_start'] = True
+
+        self.map_data = self.sim_data['map_data']
+        self.ui_info = self.sim_data['ui_info']
+        self.simulator.setMapInfo(self.map_data, self.ui_info)
+        self.simulator.set_shared_data(self.sim_data)
+        self.simulator.set_data(self.order_data, self.sim_data)
+        self.simulator.start_setting()  # 그냥 시작합니다.
+        self.simulator.show()
+
+
+    def ViewData(self,order_data,sim_data,to_el_time,av_tr_time,av_tr_distance):
+        self.sim_data = sim_data
+        self.order_data =order_data
+        temp = sim_data["sim_info_ronum_rocap_initorder"]#로봇수, 로봇의 허용량, 초기 주문량등이 정해져있다.
+        robot_number = temp[0]
+        robot_cap = temp[1]
+        init_order = temp[2]
+        map_data = sim_data['map_data']
+
+        map_width = map_data['map_size'][0]
+        map_height = map_data['map_size'][1]
+        map_resolution = map_data['map_resolution'][0]
+        map_resolution_2 = map_data['map_resolution'][1]
+        occupy_map = map_data['occupay_map']
+        res_width = map_width / map_resolution
+        shelf_number = len(map_data['shelf_point'])
+        # print(robot_number,robot_cap,init_order)
+        self.label_robot_number.setText(str(robot_number))
+        self.label_order_number.setText(str(init_order))
+        # self.label_capacity.setText(str(robot_cap))
+        self.label_robotspeed.setText(str(1)+"m/s")
+        self.label_w_size.setText(str(map_width)+" X "+str(map_height)+"m")
+        self.label_shelves.setText(str(shelf_number))
+        algorithm_name = ['Random',"Div & Conq","Greedy","PSO","GA","ACO"]
+        algorithm_color = ['black', 'red', 'gold', 'lawngreen', 'deepskyblue', 'darkviolet']
+        fig = plt.figure(figsize=(6, 5.5))
+        # 전체 수행시간에 대한 막대그래프를 그립니다.
+        al_length = len(to_el_time)
+        x = np.arange(al_length)
+        robot_value = to_el_time
+        plt.title("Total elapsed time", fontsize=12)
+        plt.bar(x, robot_value, width=0.8, color=algorithm_color)
+        plt.xticks(x,algorithm_name,fontsize= 8)
+        plt.xlabel("Algorithm", fontsize=10)
+        plt.ylabel("Minute", fontsize=10)
+        plt.savefig("result/전체수행시간.png")
+        plt.clf()
+
+        fig = plt.figure(figsize=(5, 4.7))
+        # 전체 수행시간에 대한 막대그래프를 그립니다.
+        al_length = len(to_el_time)
+        x = np.arange(al_length)
+        robot_value = sim_data['Computation_time']
+        plt.title("Computation time", fontsize=12)
+        plt.bar(x, robot_value, width=0.8, color=algorithm_color)
+        plt.xticks(x, algorithm_name, fontsize=8)
+        plt.xlabel("Algorithm", fontsize=10)
+        plt.ylabel("Second", fontsize=10)
+        plt.savefig("result/전체_계산시간.png")
+        plt.clf()
+
+        fig = plt.figure(figsize=(6, 5.5))
+        b_data = copy.copy(sim_data['algorithm_step'])
+        plt.title("Travel distance", fontsize=12)
+        for i, c in enumerate(algorithm_color):
+            plt.boxplot([b_data[i]],
+                        labels=[algorithm_name[i]],
+                        positions=[i],
+                        widths=0.5,
+                        vert=True,
+                        patch_artist=True,
+                        boxprops=dict(facecolor=c, color='k'))
+        plt.xticks(fontsize=8)
+        plt.xlabel("Algorithm", fontsize=10)
+        plt.ylabel("Meter", fontsize=10)
+        plt.savefig("result/평균이동거리.png")
+        plt.clf()
+
+        fig = plt.figure(figsize=(5, 5))
+        b_data = copy.copy(sim_data['algorithm_time'])
+        plt.title("Travel time", fontsize=12)
+        for i, c in enumerate(algorithm_color):
+            plt.boxplot([b_data[i]],
+                        labels=[algorithm_name[i]],
+                        positions=[i],
+                        widths=0.5,
+                        vert=True,
+                        patch_artist=True,
+                        boxprops=dict(facecolor=c, color='k'))
+        plt.xticks(fontsize=8)
+        plt.xlabel("Algorithm", fontsize=10)
+        plt.ylabel("Minute", fontsize=10)
+        plt.savefig("result/평균이동시간.png")
+        plt.clf()
+
+
+
+        self.qPixmapVar = QPixmap()
+        self.qPixmapVar.load("./sim/"+'map.jpg')
+        self.qPixmapVar = self.qPixmapVar.scaled(self.label_wi.width(),self.label_wi.height(),Qt.KeepAspectRatio)
+        self.label_wi.setPixmap(self.qPixmapVar)
+
+        self.qPixmapVar = QPixmap()
+        self.qPixmapVar.load("result/전체수행시간.png")
+        self.qPixmapVar = self.qPixmapVar.scaled(self.label_tet.width(), self.label_tet.height(),Qt.KeepAspectRatio)
+        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_tet.width(), self.label_tet.height())
+        self.label_tet.setPixmap(self.qPixmapVar)
+
+        self.qPixmapVar = QPixmap()
+        self.qPixmapVar.load("result/평균이동거리.png")
+        self.qPixmapVar = self.qPixmapVar.scaled(self.label_att.width(), self.label_att.height(),Qt.KeepAspectRatio)
+        self.label_att.setPixmap(self.qPixmapVar)
+
+        self.qPixmapVar = QPixmap()
+        self.qPixmapVar.load("result/평균이동시간.png")
+        self.qPixmapVar = self.qPixmapVar.scaled(self.label_atd.width(), self.label_atd.height(),Qt.KeepAspectRatio)
+        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_atd.width(), self.label_atd.height())
+        self.label_atd.setPixmap(self.qPixmapVar)
+
+        self.qPixmapVar = QPixmap()
+        self.qPixmapVar.load("result/전체_계산시간.png")
+        self.qPixmapVar = self.qPixmapVar.scaled(self.label_ct.width(), self.label_ct.height(), Qt.KeepAspectRatio)
+        self.label_ct.setPixmap(self.qPixmapVar)
+
+        # self.qPixmapVar = QPixmap()
+        # self.qPixmapVar.load("result/notsp_bp.png")
+        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_no_tsp.width(), self.label_no_tsp.height())
+        # self.label_no_tsp.setPixmap(self.qPixmapVar)
+
+class Widget_Simulator_no_gui(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        uic.loadUi("info_simulator.ui",self)
+        # self.is_view_shelf = False
+        # self.is_view_route =False
+        # self.is_view_full_route = False
+        # self.checkBox_viewAllShelf.stateChanged.connect(self.viewShelf)
+        self.timer = QTimer(self)
+        self.tsp_mode = "ACO"
+        self.timer.timeout.connect(self.update_progress)
+        self.button_saveresult.clicked.connect(self.saveresult)
+        self.button_showresult.clicked.connect(self.showresult)
+        self.sim_viwer_a = sim_viwer()
+        self.button_saveresult.hide()
+
+    def showresult(self):
+        to_el_time = self.sim_data['Total_elapsed_time']
+        av_tr_time = self.sim_data['Average_travel_time']
+        av_tr_distance = self.sim_data['Average_travel_distance']
+        self.sim_viwer_a.ViewData(self.order_data,self.sim_data, to_el_time,av_tr_time,av_tr_distance)
+        self.sim_viwer_a.show()
+        # print('Algorithm_execution_time', self.sim_data['Total_elapsed_time'])
+        # print('Average_travel_time', self.sim_data['Average_travel_time'])
+        # print('Average_travel_distance', self.sim_data['Average_travel_distance'])
+
+    def closeEvent(self, QCloseEvent):
+        self.order_data['is_start'] = False
+        self.sim_data["fast_start"] = False
+        self.order_data["is_set_order"] = False  # 선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
+        self.order_data["is_set_initOrder"] = False  # 초기 주문들이 다 정해졋을때, 사용하는 변수
+        self.order_data["reset"] = True
+        self.sim_data['solver_ind'] = 0
+        self.sim_data['order_do'] = 0
+        self.sim_data['algorithm_time'] = [[], [], [], [], [], []]
+        self.sim_data['algorithm_step'] = [[], [], [], [], [], []]
+        self.sim_data['algorithm_full_time'] = [0. for _ in range(len(self.sim_data['solver_set']))]
+        self.sim_data['simulation_end'] = False
+        self.sim_data['Total_elapsed_time'] = [0. for _ in range(len(self.sim_data['solver_set']))]
+        self.sim_data['Average_travel_time'] = [0. for _ in range(len(self.sim_data['solver_set']))]
+        self.sim_data['Average_travel_distance'] = [0. for _ in range(len(self.sim_data['solver_set']))]
+        self.sim_data["force_die"] = True
+        self.button_showresult.setDisabled(True)
+        self.button_saveresult.setDisabled(True)
+        # print("all dead")
+        self.timer.stop()
+
+    def saveresult(self):
+        al_time = self.sim_data['algorithm_time']
+        al_step = self.sim_data['algorithm_step']
+        al_full_time = self.sim_data['algorithm_full_time']
+        makePDF(al_time,al_step,al_full_time)
+
+    def update_progress(self):
+        do_order = self.sim_data['order_do']
+        full_order =self.order_data['sim_data'][1]*6.
+        percent = int(do_order/full_order*100)
+        self.progressBar.setValue(percent)
+        if percent ==100 :
+            self.button_showresult.setEnabled(True)
+            # self.button_saveresult.setEnabled(True)
+
+            self.map_drawer = Widget_drawMap(self)
+            self.map_drawer.hide()
+            self.map_name = 'map.jpg'
+
+            # 맵을 한번 그려서 저장합니다.
+            self.map_drawer.draw_and_save(self.map_data, self.map_name, self.ui_info)
+
+    def set_data(self, order_data,sim_data,map_data,ui_info):
+        self.order_data = order_data
+        self.sim_data = sim_data
+        self.map_data = map_data
+        self.ui_info = ui_info
+
+
+    def start_setting(self):
+        self.order_data['is_start'] = True
+        self.sim_data["fast_start"] = True

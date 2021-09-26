@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>시물레이션</string>
   </property>
   <widget class="QGroupBox" name="groupBox_viewer">
    <property name="geometry">
@@ -50,15 +50,16 @@
     <property name="font">
      <font>
       <family>맑은 고딕</family>
+      <pointsize>7</pointsize>
       <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
     <property name="text">
-     <string>no tsp solver</string>
+     <string>Random</string>
     </property>
     <property name="checked">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_GA">
@@ -121,7 +122,7 @@
      <string>ACO</string>
     </property>
     <property name="checked">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -297,7 +298,7 @@
      </font>
     </property>
     <property name="text">
-     <string>DC</string>
+     <string>Div. &amp;&amp; Conq</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_GREEDY">
