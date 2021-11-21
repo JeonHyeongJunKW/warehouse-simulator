@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>263</width>
-    <height>399</height>
+    <height>476</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -118,7 +118,29 @@
     </font>
    </property>
    <property name="text">
-    <string>시물레이션 시작</string>
+    <string>정적 시물레이션</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="button_simStart_dynamic">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>350</y>
+     <width>141</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>HY견고딕</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>동적 시물레이션</string>
    </property>
   </widget>
  </widget>

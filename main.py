@@ -16,6 +16,8 @@ import os
 from multiprocessing import Process, Manager
 from sub_proc_simulator import *
 from fast_simulation import *
+
+from Dynamic.dynamic_sim_gui import Dynamic_Sim
 class WindowClass(QMainWindow, form_class):
     def __init__(self):
         super(WindowClass,self).__init__()
@@ -24,7 +26,7 @@ class WindowClass(QMainWindow, form_class):
         self.a = 0
         self.move(500, 300)
         self.setFixedWidth(263)
-        self.setFixedHeight(399)
+        self.setFixedHeight(476)
 
         self.mapMaker = Widget_Warehouse()
         self.ui_info = [self.mapMaker.init_map_x, self.mapMaker.init_map_y]
@@ -42,6 +44,20 @@ class WindowClass(QMainWindow, form_class):
         self.button_loadMap.clicked.connect(self.loadMap)
         self.button_paramset.clicked.connect(self.setSim)
         self.button_simStart.clicked.connect(self.openSimulator)
+        self.button_simStart_dynamic.clicked.connect(self.openDynamicSimulator)
+
+        #---21-11-17 : 다이나믹 시물레이션 추가
+        self.dynamic_simulation = None
+
+    def openDynamicSimulator(self):
+        '''
+        동적 시물레이션을 엽니다.
+        '''
+        if self.dynamic_simulation :
+            del self.dynamic_simulation#시물레이터를 삭제합니다.
+
+        self.dynamic_simulation = Dynamic_Sim()#다시만듭니다.
+        self.dynamic_simulation.start(self.map_data, self.simulation_maker.sim_data, self.ui_info)
 
     def getProcess(self, order_maker,warehouse_fast_solver,warehouse_tsp_solver):
         self.order_maker = order_maker
@@ -59,22 +75,6 @@ class WindowClass(QMainWindow, form_class):
         self.warehouse_tsp_solver.kill()
         self.warehouse_fast_solver.kill()
         self.simulator=None
-        # for proc in psutil.process_iter():
-        #     try:  # 프로세스 이름, PID값 가져오기
-        #         processName = proc.name()
-        #         processID = proc.pid
-        #         if processName[:6] == "Python":
-        #             commandLine = proc.cmdline() # 동일한 프로세스 확인. code 확인
-        #             if 'main.py' in commandLine:
-        #                 parent_pid = processID #PID
-        #                 parent = psutil.Process(parent_pid) # PID 찾기
-        #                 for child in parent.children(recursive=True): #자식-부모 종료
-        #                     child.kill()
-        #                     parent.kill()
-        #         else:
-        #             print(processName, ' ', commandLine, ' - ', processID)
-        #     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess): #예외처리
-        #         pass
 
     def openSimulator(self):
         if self.simulator :
@@ -95,10 +95,7 @@ class WindowClass(QMainWindow, form_class):
             msgBox.setText("시물레이션의 정보가 없습니다.")
             msgBox.exec_()
             return False
-        # self.simulator.set_process(self.order_maker,self.warehouse_tsp_solver)#프로세스 정보를 얻어옵니다.
-        # self.simulator.set_shared_data(self.sim_data)#공유메모리 정보를 얻어옵니다.
-        # self.simulator.setSimInfo(self.simulation_maker.sim_data)#시물레이션 정보를 얻어옵니다.
-        # 공유변수를 실제로 시물레이션을 그리는쪽에 보내줍니다.
+
         self.simulator.set_data(self.order_data, self.sim_data,self.map_data, self.ui_info)
 
 

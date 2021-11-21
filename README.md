@@ -83,6 +83,9 @@
 ### 맵 정하기 
 - 실행 후, '맵 불러오기' 버튼을 누르면, 시물레이션 맵으로 설정됩니다. 
 
+### 추가내역 
+- 21-11-21 Dynamic tsp와 online order picking을 위한 시뮬레이션 추가 
+
 <a name="footnote_1">[1] Task allocation </a>: 비슷한 작업을 묶어서 멀티 로봇에게 실시간으로 작업을 분배 
 
 <a name="footnote_2">[2] Task sequencing</a>: 실시간으로 로봇이 방문해야하는 지점이 달라지는 경우에도 최적의 경로를 찾아내는 Dynamic TSP문제해결

@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from fpdf import FPDF
 # from matplotlib.backends.ba
 def makePDF(al_time,al_step,al_full_time):
     algorithm_name = ['Default',"GA","PSO","ACO","Div. & Conq. ","Greedy"]
