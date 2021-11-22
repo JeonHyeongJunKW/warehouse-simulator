@@ -1,28 +1,34 @@
 import math
 from Dynamic.Dynamic_Robot import W_Robot
-
-
+from multiprocessing import Process,Manager
+from Dynamic.dynamic_action_controller import action_control
+from Dynamic.DEBUG_tool import DEBUG_log
 class procees_robot_mover:
     def __init__(self):
+        self.sub_process = None
         self.robot_data = None
 
-    def run(self, order_data):
-        self.order_data = order_data
-        self.order_data["reset"] = False  # 리셋플레그를 false로합니다.
+    def run(self):
+        self.robot_data["reset"] = False  # 리셋플레그를 false로합니다.
+        if self.sub_process != None:
+            if self.sub_process.is_alive():
+                self.sub_process.kill()
 
+        self.sub_process = Process(target=self.process, args=(self.robot_data,1,2))
 
+        self.sub_process.start()
 
     def reset(self):
         # while 탈출 및 sub process를 죽입니다.
-        self.order_data["reset"] = True
+        self.robot_data["reset"] = True
         if self.sub_process.is_alive():
             self.sub_process.kill()
 
-    def process(self, robot_data):
+    def process(self, robot_data, no_use,no_use2):
         ## dynamic order make
-        shelf_grid_list = robot_data['shelf_grid_list']
-        occupy_map = robot_data['occupy_map']
-
+        shelf_grid_list = self.shelf_grid_list#grid상에 좌표(목표점 생성에 사용)
+        occupy_map = self.occupy_map#Astar 알고리즘을 통한 경로생성에 사용
+        action_control(robot_data,shelf_grid_list,occupy_map)
 
     def initialize_robot(self,robot_data):
         #로봇 초기화를 위한 파라미터들
@@ -39,13 +45,13 @@ class procees_robot_mover:
         map_height = map_data['map_size'][1]
         map_resolution = map_data['map_resolution'][0]
         map_resolution_2 = map_data['map_resolution'][1]
-        occupy_map = map_data['occupay_map']
+        self.occupy_map = map_data['occupay_map']
         res_width = map_width / map_resolution
         res_height = map_height / map_resolution_2
         saved_shelf_point = map_data['shelf_point']
 
 
-        shelf_grid_list = []##각 선반별로 차지하고 있는 격자를 리스트의 형태로 저장합니다.
+        self.shelf_grid_list = []##각 선반별로 차지하고 있는 격자를 리스트의 형태로 저장합니다.
         for ind, point in enumerate(saved_shelf_point):
             if point[2] == 0 or point[2] == 180:
                 lefttop = [point[0] - int(point[3] / 2),
@@ -68,8 +74,7 @@ class procees_robot_mover:
             for i in range(small_y_index, big_y_index):
                 for j in range(small_x_index, big_x_index):
                     grid_list.append([i, j])
-            shelf_grid_list.append(grid_list)
-
+            self.shelf_grid_list.append(grid_list)
         #로봇 초기화
         robots = []
         robot_ind = []
@@ -87,9 +92,8 @@ class procees_robot_mover:
             robots.append(robot)
 
         self.robot_data['robot'] =robots# W_Robot객체를 저장합니다.
-        self.robot_data['step'] = [0 for _ in range(len(robot_data['robot']))]#로봇의 수만큼 이동 횟수를 저장합니다.
-        self.robot_data['is_work'] = [False for _ in range(len(robot_data['robot']))]#로봇의 수만큼 현재 피킹중인지 확인합니다.
-        self.robot_data['path'] = [[] for _ in range(len(robot_data['robot']))]#각 로봇이 가야하는 경로입니다.
-        self.robot_data['shelf_grid_list'] = shelf_grid_list#로봇가야하는 피킹지점에 대한 grid list입니다.
-        self.robot_data['occupy_map'] = occupy_map#A star간에 필요한 occupy map입니다.
         self.robot_data['current_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
+        self.robot_data['past_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇에게 할당된 배치입니다.
+        self.robot_data['stop'] = [True for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
+        self.robot_data['already_gone_node'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇이 이미 이동한 노드입니다.
+        self.robot_data['optimal_path'] = [[] for _ in range(len(robot_data['robot']))]#현재 로봇에 대한 최적경로

@@ -16,8 +16,8 @@ class Widget_SimSet(QWidget):
         self.is_randomOrder = True#임의로 정한방식으로 주문이 들어옵니다.
         self.default_initorder = 1000#초기 주문량
         self.default_orderrate = 10#주문의 증가율
-        self.robot_cap = 6 #로봇의 아이템 저장용량
-        self.robot_number = 100#로봇의 대수
+        self.robot_cap = 1 #로봇의 아이템 저장용량
+        self.robot_number = 1#로봇의 대수
         self.is_safe_close = True
 
 

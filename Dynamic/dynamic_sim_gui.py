@@ -82,14 +82,18 @@ class Dynamic_Sim(QWidget):
     def Real_Simulation_Start(self):
         #시물레이션 프로세스를 시작합니다.
         DEBUG_log("시물레이션 시작")
-        # self.process_robot_mover.run()
         self.process_order_maker.run(self.order_worker_data)
         # 초기화된 robot_mover_data를 이용합니다.
         self.process_tsp_solver.run(self.order_worker_data,
                                     self.tsp_solver_data,
                                     self.robot_mover_data)
 
+        self.process_robot_mover.run()
+
+
+
     def closeEvent(self, QCloseEvent):
         self.process_order_maker.reset()
         self.process_tsp_solver.reset()
+        self.process_robot_mover.reset()
 

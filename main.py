@@ -71,9 +71,9 @@ class WindowClass(QMainWindow, form_class):
     def closeEvent(self, QCloseEvent):
         self.sim_data['is_kill_robot_move'] = True
         time.sleep(1)
-        self.order_maker.kill()
-        self.warehouse_tsp_solver.kill()
-        self.warehouse_fast_solver.kill()
+        # self.order_maker.kill()
+        # self.warehouse_tsp_solver.kill()
+        # self.warehouse_fast_solver.kill()
         self.simulator=None
 
     def openSimulator(self):
@@ -203,9 +203,9 @@ if __name__ == "__main__":
         order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
         warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
         warehouse_fast_solver = Process(target=process_Fast_sim, args=(sim_data, order_data))
-        order_maker.start()
-        warehouse_tsp_solver.start()
-        warehouse_fast_solver.start()
+        # order_maker.start()
+        # warehouse_tsp_solver.start()
+        # warehouse_fast_solver.start()
         #GUI를 담당하는 프로세스 입니다.
         myWindow = WindowClass()
         myWindow.getProcess(order_maker,warehouse_fast_solver,warehouse_tsp_solver)
@@ -213,8 +213,9 @@ if __name__ == "__main__":
         myWindow.show()
         sys.exit(app.exec_())
     except:
-        order_maker.join()
-        warehouse_fast_solver.join()
+        # order_maker.join()
+        # warehouse_fast_solver.join()
+        print("simulation die")
 
 
 

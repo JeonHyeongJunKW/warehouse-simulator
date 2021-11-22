@@ -149,11 +149,11 @@ def robot_mover(robot_data,sim_data):
             if robot_data['is_work'][robot_ind] and not robot.is_work:
                 #해당로봇이 일을 할당받았지만 일을 안하고 있다면
                 robot.is_work = True#로봇이 다시 일하게합니다.
-                solved_order =copy.copy(robot_data['path'][robot_ind])
+                solved_order =copy.copy(robot_data['path'][robot_ind])#경로를 가져온다.
                 part_shelf_grid = []
 
                 for shelf_grid in solved_order:#처음 노드를 제외한 나머지 노드에 대한 피킹 주변지역을 얻습니다.
-                    part_shelf_grid.append(shelf_grid_list[shelf_grid - 1])
+                    part_shelf_grid.append(shelf_grid_list[shelf_grid - 1])#실제 shelf 격자들을 얻어온다.
                 temp_path = copy.deepcopy(robot_data['path'])
                 temp_path[robot_ind] = solved_order
                 robot_data['path'] = temp_path

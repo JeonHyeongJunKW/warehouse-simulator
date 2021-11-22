@@ -35,14 +35,13 @@ class procees_order_maker:
         order_rate = order_data["simulation_order_set"][2]  # 시간당 주문 증가량
 
         kind = order_data['order_kind'] # 주문의 종류
-        order_data["orders"] = [list(set([random.choice(list(range(1, kind + 1))) for _ in range(5)])) for __ in
+        order_data["orders"] = [list(set([random.choice(list(range(kind))) for _ in range(5)])) for __ in
                                 range(initOrder)]
-        j =0
         while True:
             if order_data["reset"]:
                 break
 
             time.sleep(1)
-            new_order = [list(set([random.choice(list(range(1, kind + 1))) for _ in range(5)])) for __ in
+            new_order = [list(set([random.choice(list(range(kind))) for _ in range(5)])) for __ in
                          range(order_rate)]
             order_data["orders"] = order_data["orders"] + new_order

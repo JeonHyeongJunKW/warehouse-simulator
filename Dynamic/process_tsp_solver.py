@@ -21,7 +21,6 @@ class procees_tsp_solver:
         self.max_batch_size = 12  # interventionist방식에서 로봇에 대한 최대 배치사이즈(CAPACITY)
         DEBUG_log("초기 배치사이즈 : " + str(self.init_batch_size) + " 최대 배치사이즈 : " + str(self.max_batch_size), "DETAIL")
 
-
     def run(self, order_data,solver_data,robot_data):
         self.order_data = order_data
         self.solver_data = solver_data
@@ -59,33 +58,14 @@ class procees_tsp_solver:
             self.delete_orders(order_data, solved_orders_index)
             # 2. 배치를 교체하고, tsp문제를 풀게합니다. 현재 위치가 반영되어야합니다.
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
-
-            time.sleep(1)
-
-
-
-
         #-------------------추가된 부분---------------------
     def solve_batch(self, current_orders, readonly_robot_data, readonly_current_robot_batch):
-        '''
-        current_orders : 현재 주문정보
-        robot_data : 기존에 어떤 배치를 받았는가?(없으면 없는데로, 있으면 용량제한만큼),
-        전역변수로 사용되는
-
-        반환값:
-        현재 남은 주문상태, 최종적으로 할당된 배치, 바뀐 배치를 가지는 로봇의 인덱스,
-        '''
-        # item_position = solver_data["node_point_y_x"]
-
-
         readonly_orders = copy.deepcopy(current_orders["orders"])  # 읽을수만 있는 현재 최종 order를 가져옵니다.
         if self.using_order_batch == "FIFO":
             return online_order_batch_FIFO(readonly_orders,
                                            self.init_batch_size,
                                            self.max_batch_size,
                                            readonly_current_robot_batch)
-
-
 
     def initalize(self, solver_data):
         ## dynamic order make
@@ -178,8 +158,8 @@ class procees_tsp_solver:
     def change_batch_and_solve_tsp(self, solved_batches,changed_robot_index,robot_data):
         #배치를 반영합니다
         robot_data['current_robot_batch'] = solved_batches
-        DEBUG_log("경로를 수정하는 로봇들", "DETAIL")
-        DEBUG_log(changed_robot_index, "DETAIL")
+        DEBUG_log("경로를 수정하는 로봇들", "VERY_DETAIL")
+        DEBUG_log(changed_robot_index, "VERY_DETAIL")
         # DEBUG_log("주문 갯수 : " + str(len(current_order["orders"])), "VERY_DETAIL")
 
         if self.using_order_sequence == "TSP_ONLINE":

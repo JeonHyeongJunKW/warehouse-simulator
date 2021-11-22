@@ -34,7 +34,12 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, re
             continue
 
         if len(readonly_orders) < additional_orders_number:
-            return solved_orders_index, solved_batches, changed_robot_index
+            solved_batches[robot_index] += readonly_orders[start_order:start_order + len(readonly_orders)]
+
+            changed_robot_index.append(robot_index)  # 바뀐 로봇 배치를 기록합니다.
+            solved_orders_index = solved_orders_index + list(
+                range(start_order, start_order + len(readonly_orders), 1))
+            start_order += len(readonly_orders)  # 새롭게 할당할 때 사용할 start_order를 수정합니다.
 
         if len(robot_batch) < max_batch_size:
             solved_batches[robot_index] += readonly_orders[start_order:start_order+additional_orders_number]
@@ -43,13 +48,13 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, re
             solved_orders_index = solved_orders_index + list(range(start_order, start_order + additional_orders_number, 1))
             start_order += additional_orders_number  # 새롭게 할당할 때 사용할 start_order를 수정합니다.
     DEBUG_log("\n--------------------\n","DETAIL")
-    DEBUG_log("남은 주문수", "SIMPLE")
-    DEBUG_log(len(readonly_orders), "SIMPLE")
+    DEBUG_log("남은 주문수", "VERY_DETAIL")
+    DEBUG_log(len(readonly_orders), "VERY_DETAIL")
     DEBUG_log("처리되어야하는 주문들", "VERY_DETAIL")
     DEBUG_log(solved_orders_index[0:5],"VERY_DETAIL")
 
     DEBUG_log("바뀐 배치들 일부 ", "VERY_DETAIL")
-    DEBUG_log(solved_batches[0:1],"VERY_DETAIL")
+    DEBUG_log(solved_batches,"VERY_DETAIL")
     DEBUG_log("바뀐로봇들 일부", "DETAIL")
     DEBUG_log(changed_robot_index[0:1],"DETAIL")
 
