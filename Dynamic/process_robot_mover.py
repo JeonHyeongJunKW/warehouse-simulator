@@ -8,13 +8,13 @@ class procees_robot_mover:
         self.sub_process = None
         self.robot_data = None
 
-    def run(self):
+    def run(self,gui_data):
         self.robot_data["reset"] = False  # 리셋플레그를 false로합니다.
         if self.sub_process != None:
             if self.sub_process.is_alive():
                 self.sub_process.kill()
 
-        self.sub_process = Process(target=self.process, args=(self.robot_data,1,2))
+        self.sub_process = Process(target=self.process, args=(self.robot_data,gui_data))
 
         self.sub_process.start()
 
@@ -24,13 +24,13 @@ class procees_robot_mover:
         if self.sub_process.is_alive():
             self.sub_process.kill()
 
-    def process(self, robot_data, no_use,no_use2):
+    def process(self, robot_data, gui_data):
         ## dynamic order make
         shelf_grid_list = self.shelf_grid_list#grid상에 좌표(목표점 생성에 사용)
         occupy_map = self.occupy_map#Astar 알고리즘을 통한 경로생성에 사용
-        action_control(robot_data,shelf_grid_list,occupy_map)
+        action_control(robot_data,shelf_grid_list,occupy_map, gui_data)
 
-    def initialize_robot(self,robot_data):
+    def initialize_robot(self,robot_data, gui_data):
         #로봇 초기화를 위한 파라미터들
         self.robot_data = robot_data
 
@@ -97,3 +97,11 @@ class procees_robot_mover:
         self.robot_data['stop'] = [True for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
         self.robot_data['already_gone_node'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇이 이미 이동한 노드입니다.
         self.robot_data['optimal_path'] = [[] for _ in range(len(robot_data['robot']))]#현재 로봇에 대한 최적경로
+
+        ##------------------------------------GUI를 그리기 위한 부분--------------------------------------------------
+
+        gui_data["current_robot_position"] = [[0, 0] for _ in range(len(robot_data['robot']))]# 로봇의 현재 위치
+        gui_data["short_path"] = [[] for _ in range(len(robot_data['robot']))]# 로봇의 과거 위치
+        gui_data["long_path"] = [[] for _ in range(len(robot_data['robot']))]
+        gui_data["all_target"] = [[] for _ in range(len(robot_data['robot']))]
+        gui_data["current_target"] = [[] for _ in range(len(robot_data['robot']))]

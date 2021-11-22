@@ -26,8 +26,35 @@ def restart_robot(robot_data,robot_ind):
     temp[robot_ind] = True
     robot_data['stop'] = temp
 
+def gui_data_update(robots, gui_data):
+    #로봇의 현재위치를 갱신합니다.
+    '''
+        gui_data["current_robot_position"] = [[0, 0] for _ in range(len(robot_data['robot']))]# 로봇의 현재 위치
+        gui_data["short_path"] = [[] for _ in range(len(robot_data['robot']))]# 로봇의 과거 위치
+        gui_data["long_path"] = [[] for _ in range(len(robot_data['robot']))]
+        gui_data["all_target"] = [[] for _ in range(len(robot_data['robot']))]
+        gui_data["current_target"] = [[] for _ in range(len(robot_data['robot']))]
+    '''
+    temp_gui_data = copy.deepcopy(gui_data)
+    temp_robots = copy.deepcopy(robots)
+    for robot_ind in range(len(robots)):
+        robot_point = temp_robots[robot_ind].current_point
+        temp_gui_data["current_robot_position"][robot_ind] = robot_point
 
-def action_control( robot_data,shelf_grid_list,occupy_map):
+        if len(temp_gui_data["short_path"][robot_ind]) >4:
+            temp_gui_data["short_path"][robot_ind].pop(0)
+        temp_gui_data["short_path"][robot_ind].append(robot_point)
+
+        if temp_robots[robot_ind]["current_robot_batch"] == []:
+            temp_gui_data["long_path"][robot_ind] = []
+        temp_gui_data["long_path"][robot_ind].append(robot_point)
+
+        temp_gui_data["current_target"][robot_ind] = temp_robots[robot_ind].goal_point
+
+        #todo
+
+
+def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
     # 로봇 데이터를 기반으로 하여 현재 로봇을 움직인다.
     DEBUG_log("로봇 제어 시작.")
     robots = copy.deepcopy(robot_data['robot'])  # 임시 로봇을 가져온다.
@@ -68,11 +95,11 @@ def action_control( robot_data,shelf_grid_list,occupy_map):
                 temp[robot_ind]= copy.copy(new_robot.already_gone_node)
                 robot_data['already_gone_node'] =temp
                 if robot.packing_point_arrive:
-                    # print("로봇 : ",robot_ind,"재시작합니다.")
                     robot.packing_point_arrive = False
 
                     restart_robot(robot_data,robot_ind)
-
+        # GUI 업데이트
+        gui_data_update(robots, gui_data)
         want_time = 0.1
         real_time = want_time - (time.time() - start)
         if real_time > 0:
@@ -80,4 +107,4 @@ def action_control( robot_data,shelf_grid_list,occupy_map):
         #로봇 업데이트
         robot_data['robot'] = robots
 
-        #GUI 업데이트
+

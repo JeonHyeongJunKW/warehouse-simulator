@@ -7,6 +7,7 @@ from Dynamic.process_order_maker import procees_order_maker
 from Dynamic.process_tsp_solver import procees_tsp_solver
 from Dynamic.process_robot_mover import procees_robot_mover
 from Dynamic.DEBUG_tool import DEBUG_log
+from Dynamic.Dynamic_viewer import online_simulator
 
 class Dynamic_Sim(QWidget):
     def __init__(self, *args, **kwargs):
@@ -34,6 +35,8 @@ class Dynamic_Sim(QWidget):
         DEBUG_log("robot 무브메이커 초기화가 끝났습니다.")
         # 시각적으로 그려주는 GUI 위젯
         self.gui_simulation = None
+
+        self.gui_data = Manager().dict()
 
 
 
@@ -76,8 +79,11 @@ class Dynamic_Sim(QWidget):
         self.robot_mover_data["ui_data"] = self.ui_data
 
         #로봇만들기전에 선행되는 전처리과정
-        self.process_robot_mover.initialize_robot(self.robot_mover_data)
+        self.process_robot_mover.initialize_robot(self.robot_mover_data,self.gui_data)
 
+        #GUI담당 프로세스 초기화
+        self.gui_data["map_data"] = self.map_data
+        self.gui_data["ui_data"] = self.ui_data
 
     def Real_Simulation_Start(self):
         #시물레이션 프로세스를 시작합니다.
@@ -88,7 +94,9 @@ class Dynamic_Sim(QWidget):
                                     self.tsp_solver_data,
                                     self.robot_mover_data)
 
-        self.process_robot_mover.run()
+        self.process_robot_mover.run(self.gui_data)
+        self.gui_simulation = online_simulator()
+        self.gui_simulation.run(self.gui_data)
 
 
 
