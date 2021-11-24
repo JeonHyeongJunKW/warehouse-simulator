@@ -24,7 +24,15 @@
 - 패킹지점에 따른 색깔표시 다르게 하기(v)
 - 맵 사이즈 전반적으로 키우기(v)
 - 로봇의 전체경로 보여주기(v)
-### 시뮬레이션 영상
+
+# 동적 시뮬레이션 영상 
+## 시뮬레이션 영상
+
+<p align="center"> <img width="60%"  src="https://user-images.githubusercontent.com/63538314/143274558-39752f06-0fc3-4e96-8a86-a97a4a3cb544.gif"   /></p>
+
+## 알고리즘별 결과 출력 영상
+
+<p align="center"> <img width="60%" height="20%"  src="https://user-images.githubusercontent.com/63538314/143274699-f87d4fc0-ccce-4078-af67-c2243f49cbbe.gif" /></p>
 
 ### 알고리즘 출력결과
 
