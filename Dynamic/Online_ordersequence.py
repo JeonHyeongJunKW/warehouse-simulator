@@ -6,15 +6,25 @@ from Dynamic.tsp_solver_for_online import static_aco_tsp_solver
 
 def update_tsp_node(robot_data,robot_index):
     # 로봇의 과거배치를 받습니다.
+    if len(robot_data["current_robot_batch"][robot_index]) == 0:
+        print("뭔가 이상합니다..")
     past_batch = robot_data['past_robot_batch'][robot_index]
-    union_batch = np.array(list(set(sum(past_batch, []))))  # 과거배치를 전부 합칩니다.
+    union_batch = list(set(sum(past_batch, [])))  # 과거배치를 전부 합칩니다.
 
     # 로봇이 이전에 간 노드를 얻습니다.
     already_gone_node = robot_data['already_gone_node'][robot_index]
-    DEBUG_log_tag("로봇의 이전의 배치 노드", union_batch, "VERY_DETAIL")
+    DEBUG_log_tag("로봇의 이전의 배치 노드", already_gone_node, "VERY_DETAIL")
 
     # 이미 간 노드를 제거합니다.
-    union_batch = np.delete(union_batch, already_gone_node)
+    temp_batch = union_batch
+    union_batch = [node for node in union_batch if node not in already_gone_node]
+    # print("--------------------------------------------------------------")
+    # print("실제에 추가된 배치",robot_data["current_robot_batch"][robot_index])
+    # print("과거에 가진 배치", robot_data["past_robot_batch"][robot_index])
+    # print("단독 ",union_batch)
+    # print("임시 배치 ",temp_batch)
+    # print("이미 간",already_gone_node)
+
     DEBUG_log_tag("로봇이 아직 안간 노드", union_batch, "VERY_DETAIL")
 
     # 배치에서 새로운 주문을 확인합니다. set을 사용하여 노드화합니다.
@@ -24,38 +34,47 @@ def update_tsp_node(robot_data,robot_index):
     new_order = list(set(sum(robot_data['current_robot_batch'][robot_index][len(past_batch):],[])))
 
     # 아직 가지않은 노드와 새로운 노드를 더합니다.
-    tsp_node = list(set(new_order + union_batch.tolist()))
+    tsp_node = list(set(new_order + union_batch))
     DEBUG_log_tag("로봇이 앞으로 가야하는 노드", tsp_node, "VERY_DETAIL")
-
     # 다시 초기화
-    robot_data['already_gone_node'][robot_index] = []# 이미 간 노드를
-    robot_data['past_robot_batch'][robot_index] = robot_data['current_robot_batch']
+    temp = copy.deepcopy(robot_data['already_gone_node'])
+    temp[robot_index] = []
+    robot_data['already_gone_node'] = temp
+
+    temp = copy.deepcopy(robot_data['past_robot_batch'])
+    temp[robot_index] =robot_data['current_robot_batch'][robot_index]
+    robot_data['past_robot_batch'] =temp
 
 
     return tsp_node
+def recovery(recovery_param,point):
+    point = [point[0]*recovery_param[3]+recovery_param[0], point[1]*recovery_param[2]+recovery_param[1]]
+    return point
 
 def solve_tsp_online(changed_robot_index,robot_data,node_point_y_x):
     DEBUG_log("-----SOLVE TSP : Independent------","DETAIL")
-
-    '''
-    1. 바뀐 tsp각 로봇별로 정지시키고, 현재위치에서 이미 간곳을 제외하고 tsp를 다시 풉니다. 
-        필요한 정보 
-            - 각 로봇이 이전 배치에서 현재까지 이동한 노드
-            - 각 로봇이 이전 배치에서 아직 이동하지 않은 노드 
-            - 각 로봇의 현재 위치 
-            - 각 로봇의 추가된 노드들  
-    2. 하나를 풀때마다 먼저 이동시킨다.
-    '''
     for changed_robot in changed_robot_index:
         # 로봇을 멈춥니다.
+
+
         temp = copy.deepcopy(robot_data['stop'])
         temp[changed_robot] = True
         robot_data['stop'] = temp
+        '''
+        robot_pos_x = math.floor((saved_pk_point[packing_ind][0] - init_map_x) / res_width)
+        robot_pos_y = math.floor((saved_pk_point[packing_ind][1] - init_map_y) / res_height)
+        '''
+
+
+
         # 로봇의 현재위치를 받습니다.
         current_coordinate =robot_data['robot'][changed_robot].current_point
-
         # 로봇의 패킹지점위치를 받습니다.
         packing_coordinate =robot_data['robot'][changed_robot].home_packing_station
+
+        current_coordinate = recovery(robot_data["packing_pose_recovery"], current_coordinate)
+
+        packing_coordinate = recovery(robot_data["packing_pose_recovery"], packing_coordinate)
 
         #tsp문제에 사용할 order node를 얻습니다.
         tsp_node = update_tsp_node(robot_data, changed_robot)
@@ -74,7 +93,11 @@ def solve_tsp_online(changed_robot_index,robot_data,node_point_y_x):
         #다시 움직이게 합니다.
         temp = copy.deepcopy(robot_data['stop'])
         temp[changed_robot] = False
-        robot_data['stop'] = temp
+        robot_data['stop'] = temp#로봇이 달리게만들어버림..
+
+        temp = copy.deepcopy(robot_data['new_batch'])
+        temp[changed_robot] = True
+        robot_data['new_batch'] = temp  # 로봇이 달리게만들어버림..
 
 
 

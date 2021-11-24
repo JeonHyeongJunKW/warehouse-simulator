@@ -3,12 +3,17 @@ from Dynamic.Dynamic_Robot import W_Robot
 from multiprocessing import Process,Manager
 from Dynamic.dynamic_action_controller import action_control
 from Dynamic.DEBUG_tool import DEBUG_log
+from Dynamic.Color_setting import getColorSet, getbrightColorSet
+
+
 class procees_robot_mover:
     def __init__(self):
         self.sub_process = None
         self.robot_data = None
+        self.robotnum = 3
 
     def run(self,gui_data):
+        self.gui_data = gui_data
         self.robot_data["reset"] = False  # 리셋플레그를 false로합니다.
         if self.sub_process != None:
             if self.sub_process.is_alive():
@@ -20,6 +25,8 @@ class procees_robot_mover:
 
     def reset(self):
         # while 탈출 및 sub process를 죽입니다.
+        if self.sub_process ==None:
+            return
         self.robot_data["reset"] = True
         if self.sub_process.is_alive():
             self.sub_process.kill()
@@ -35,7 +42,7 @@ class procees_robot_mover:
         self.robot_data = robot_data
 
         robot_cap = self.robot_data["robot_info"][3]
-        robot_number = self.robot_data["robot_info"][4]
+        robot_number = self.robotnum
         init_map_x = self.robot_data["ui_data"][0]
         init_map_y = self.robot_data["ui_data"][1]
 
@@ -97,11 +104,17 @@ class procees_robot_mover:
         self.robot_data['stop'] = [True for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
         self.robot_data['already_gone_node'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇이 이미 이동한 노드입니다.
         self.robot_data['optimal_path'] = [[] for _ in range(len(robot_data['robot']))]#현재 로봇에 대한 최적경로
-
+        self.robot_data['new_batch'] = [False for _ in range(len(robot_data['robot']))]  # 현재 로봇에 대한 최적경로
+        self.robot_data["packing_pose_recovery"] = [init_map_y,init_map_x,res_width,res_height]
         ##------------------------------------GUI를 그리기 위한 부분--------------------------------------------------
-
         gui_data["current_robot_position"] = [[0, 0] for _ in range(len(robot_data['robot']))]# 로봇의 현재 위치
         gui_data["short_path"] = [[] for _ in range(len(robot_data['robot']))]# 로봇의 과거 위치
         gui_data["long_path"] = [[] for _ in range(len(robot_data['robot']))]
-        gui_data["all_target"] = [[] for _ in range(len(robot_data['robot']))]
+        # gui_data["all_target"] = [[] for _ in range(len(robot_data['robot']))]
         gui_data["current_target"] = [[] for _ in range(len(robot_data['robot']))]
+        gui_data["packing_color"] = getColorSet(len(saved_pk_point))
+        gui_data["route_color"] = getbrightColorSet(len(saved_pk_point))
+        gui_data["packing_point"] = saved_pk_point
+        gui_data["packing_ind"] = robot_ind
+        gui_data["zero_robot_pick_point"] = []
+

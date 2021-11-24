@@ -7,6 +7,10 @@ class procees_order_maker:
         self.sub_process = None
         self.order_data = None
 
+        self.init_ordernum = 0
+        self.update_ordernum = 2
+        self.max_itemnum =4
+        self.max_ordercall = 50
 
     def run(self, order_data):
 
@@ -23,25 +27,34 @@ class procees_order_maker:
         self.sub_process.start()
 
     def reset(self):
+        if self.sub_process ==None:
+            return
         #while 탈출 및 sub process를 죽입니다.
         self.order_data["reset"] = True
+
         if self.sub_process.is_alive():
             self.sub_process.kill()
 
     def process(self,order_data, no_use):
 
         ## dynamic order make
-        initOrder = order_data["simulation_order_set"][1]  # 초기 주문량
-        order_rate = order_data["simulation_order_set"][2]  # 시간당 주문 증가량
-
+        initOrder = self.init_ordernum  # 초기 주문량
+        order_rate = self.update_ordernum  # 시간당 주문 증가량
+        order_size =self.max_itemnum
         kind = order_data['order_kind'] # 주문의 종류
-        order_data["orders"] = [list(set([random.choice(list(range(kind))) for _ in range(5)])) for __ in
+        random.seed(100)
+        order_data["orders"] = [list(set([random.choice(list(range(kind))) for _ in range(order_size)])) for __ in
                                 range(initOrder)]
+        order_count =0
         while True:
             if order_data["reset"]:
                 break
 
+            if order_count <self.max_ordercall:
+                order_count += order_rate
+            else:
+                continue
             time.sleep(1)
-            new_order = [list(set([random.choice(list(range(kind))) for _ in range(5)])) for __ in
+            new_order = [list(set([random.choice(list(range(kind))) for _ in range(order_size)])) for __ in
                          range(order_rate)]
             order_data["orders"] = order_data["orders"] + new_order

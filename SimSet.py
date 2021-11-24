@@ -14,7 +14,7 @@ class Widget_SimSet(QWidget):
         #각 파라미터 변수 저장용
         self.is_randomItem = True#랜덤으로 아이템을 배치합니다.
         self.is_randomOrder = True#임의로 정한방식으로 주문이 들어옵니다.
-        self.default_initorder = 1000#초기 주문량
+        self.default_initorder = 0#초기 주문량
         self.default_orderrate = 10#주문의 증가율
         self.robot_cap = 1 #로봇의 아이템 저장용량
         self.robot_number = 1#로봇의 대수

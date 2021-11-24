@@ -8,6 +8,7 @@ from Dynamic.process_tsp_solver import procees_tsp_solver
 from Dynamic.process_robot_mover import procees_robot_mover
 from Dynamic.DEBUG_tool import DEBUG_log
 from Dynamic.Dynamic_viewer import online_simulator
+import time
 
 class Dynamic_Sim(QWidget):
     def __init__(self, *args, **kwargs):
@@ -39,7 +40,6 @@ class Dynamic_Sim(QWidget):
         self.gui_data = Manager().dict()
 
 
-
         self.buttonRealView.clicked.connect(self.Real_Simulation_Start)
 
     def start(self,map_data,sim_data,ui_data):
@@ -68,6 +68,7 @@ class Dynamic_Sim(QWidget):
         #process_order_maker를 위한 데이터 설정
         self.order_worker_data["simulation_order_set"] = self.sim_data
         self.order_worker_data["order_kind"] = len(self.map_data['shelf_point'])
+        self.order_worker_data["orders"] = []
 
         # process_order_maker를 위한 데이터 설정
         self.tsp_solver_data["ui_data"] = self.ui_data
@@ -78,16 +79,17 @@ class Dynamic_Sim(QWidget):
         self.robot_mover_data["map_data"] = self.map_data
         self.robot_mover_data["ui_data"] = self.ui_data
 
-        #로봇만들기전에 선행되는 전처리과정
-        self.process_robot_mover.initialize_robot(self.robot_mover_data,self.gui_data)
+
 
         #GUI담당 프로세스 초기화
         self.gui_data["map_data"] = self.map_data
         self.gui_data["ui_data"] = self.ui_data
+        self.buttonRealView.setEnabled(True)
 
     def Real_Simulation_Start(self):
-        #시물레이션 프로세스를 시작합니다.
-        DEBUG_log("시물레이션 시작")
+        self.initialize()
+        # 로봇만들기전에 선행되는 전처리과정
+        self.process_robot_mover.initialize_robot(self.robot_mover_data, self.gui_data)
         self.process_order_maker.run(self.order_worker_data)
         # 초기화된 robot_mover_data를 이용합니다.
         self.process_tsp_solver.run(self.order_worker_data,
@@ -95,13 +97,30 @@ class Dynamic_Sim(QWidget):
                                     self.robot_mover_data)
 
         self.process_robot_mover.run(self.gui_data)
+
         self.gui_simulation = online_simulator()
+
         self.gui_simulation.run(self.gui_data)
-
-
 
     def closeEvent(self, QCloseEvent):
         self.process_order_maker.reset()
         self.process_tsp_solver.reset()
         self.process_robot_mover.reset()
+
+    def initialize(self):
+        self.process_order_maker.init_ordernum = int(
+            self.le_init_ordernum.text()) if self.le_init_ordernum.text().isdigit() else 0
+        self.process_order_maker.update_ordernum = int(
+            self.le_update_ordernum.text()) if self.le_update_ordernum.text().isdigit() else 2
+        self.process_order_maker.max_itemnum = int(
+            self.le_max_itemnum.text()) if self.le_max_itemnum.text().isdigit() else 4
+        self.process_order_maker.max_ordercall = int(
+            self.le_max_ordercall.text()) if self.le_max_ordercall.text().isdigit() else 50
+
+        self.process_robot_mover.robotnum = int(
+            self.le_robotnum.text()) if self.le_robotnum.text().isdigit() else 3
+        self.process_tsp_solver.init_batch_size= int(
+            self.le_init_batch_size.text()) if self.le_init_batch_size.text().isdigit() else 2
+        self.process_tsp_solver.max_batch_size = int(
+            self.le_max_batch_size.text()) if self.le_max_batch_size.text().isdigit() else 4
 

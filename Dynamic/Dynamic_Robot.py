@@ -26,18 +26,20 @@ class W_Robot:
         #패킹지점에 도달하면 flag가 True가 됩니다.
         self.packing_point_arrive = False
 
+        self.past_observe = []
+        self.am_i_say_goal =False
+        self.mission_clear =0
     def astar_move(self):
         find_goal = False
 
         #로봇이 앞으로 갈 지점을 얻습니다.
         next_pos = self.get_next_robot_pos()
 
-        #다음 주변 점을 확인해서, 목표지점이 있는지 확인합니다.
-        find_goal = self.observe_8_neigh(next_pos)
-
         #로봇의 포즈를 업데이트합니다.
         self.update_robot_pos(next_pos)
 
+        # 다음 주변 점을 확인해서, 목표지점이 있는지 확인합니다.
+        find_goal = self.observe_8_neigh(next_pos)
         # 골에 도착했다면 목표위치를 바꾼다.
         if find_goal:
             self.chanage_goal_astar()
@@ -45,7 +47,7 @@ class W_Robot:
     def chanage_goal_astar(self):# 패킹지점인지 확인한다.
         last_packing_index = len(self.picking_point)-1#마지막 패킹 지점의 인덱스
 
-        if self.last_picking_shelf_index != last_packing_index -1:#last_ind가 피킹 선반들을 다돌고, 마지막 패킹지점으로 오지 않았다면(last_ind가 마지막에서 한 개 전이어야함.)
+        if self.goal_point != self.home_packing_station:#last_ind가 피킹 선반들을 다돌고, 마지막 패킹지점으로 오지 않았다면(last_ind가 마지막에서 한 개 전이어야함.)
             self.set_goal_point(last_packing_index)# 패킹 지점을 목적지로 정할지, 피킹 지점을 목적지로 정할지 고릅니다.
             self.robot_goal_point_reset()#로봇의 골지점을 리셋하고, astar경로를 다시구합니다.
             return False
@@ -54,12 +56,15 @@ class W_Robot:
             self.already_gone_node = []
             self.last_picking_shelf_index =0
             self.packing_point_arrive = True
+            self.mission_clear +=1
             return True
 
     def assign_work_astar(self, picking_point, shelf_grid_list,occupy_map):
+        self.last_picking_shelf_index = 0
         self.picking_point = [-1] + picking_point + [self.packing_station_ind]
         self.shelf_grid_list = shelf_grid_list#노드로 여겨지는 선반들에 대한 임시 목표지점들을 선택한다.(현재 위치는 포함 x)
         goal_candidate = self.shelf_grid_list[self.last_picking_shelf_index]  # 해당 선반이 포함하고 있는 모든 점을 찾는다.
+
         min_dis = 1000
         min_ind = -1
 
@@ -98,7 +103,22 @@ class W_Robot:
         self.last_picking_shelf_index += 1  # 초기에 0에서 시작함.
 
     def get_next_robot_pos(self):
-        robot_point = self.astar_route[self.astar_ind]  # astar_ind를 기반으로 하여 바뀐 위치 아직 실제 로봇에 적용은 안함.
+
+        try:
+            robot_point = self.astar_route[self.astar_ind]  # astar_ind를 기반으로 하여 바뀐 위치 아직 실제 로봇에 적용은 안함.
+        except IndexError:
+            print("인덱스가 초과했습니다.")
+            print(self.picking_point)
+            print(self.picking_point[
+                    self.last_picking_shelf_index + 1])
+            print("현재 aster ind",self.astar_ind)
+            print("전체 astar ind", len(self.astar_route))
+            print("현재 위치",self.current_point )
+            print("목표 위치", self.goal_point)
+            print(self.occupy_map[self.current_point[0]][self.current_point[1]])
+            print(self.picking_point[self.last_picking_shelf_index + 1])
+            print(self.occupy_map[self.goal_point[0]][self.goal_point[1]])
+            print("내가 도달했니? 밖에서 문제니?",self.packing_point_arrive)
         self.astar_ind += 1
         return robot_point
 
@@ -107,14 +127,8 @@ class W_Robot:
         for view in observe_8:
             cand_y = view[0] + next_pos[0]  # 현재 이동할 지점 주변에 도착했는지 찾습니다.
             cand_x = view[1] + next_pos[1]  # 현재 이동할 지점 주변에 도착했는지 찾습니다.
-            if self.picking_point[self.last_picking_shelf_index + 1] > 20000:
-                if self.occupy_map[cand_y][cand_x] == (self.picking_point[
-                                                           self.last_picking_shelf_index+ 1]):  # 주변에 사변이 해당로봇이 가야하는 지점과 목표 값이 같다면,
-                    return True
-            else :
-                if self.occupy_map[cand_y][cand_x] == (self.picking_point[
-                    self.last_picking_shelf_index + 1]+1):  # 주변에 사변이 해당로봇이 가야하는 지점과 목표 값이 같다면,
-                    return True
+            if self.occupy_map[cand_y][cand_x] == (self.occupy_map[self.goal_point[0]][self.goal_point[1]]):  # 주변에 사변이 해당로봇이 가야하는 지점과 목표 값이 같다면,
+                return True
         return False
 
     def update_robot_pos(self,next_pos):

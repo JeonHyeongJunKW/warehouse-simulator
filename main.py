@@ -215,7 +215,7 @@ if __name__ == "__main__":
     except:
         # order_maker.join()
         # warehouse_fast_solver.join()
-        print("simulation die")
+        print(" ")
 
 
 

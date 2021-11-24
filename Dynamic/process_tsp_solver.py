@@ -5,7 +5,7 @@ import copy
 import numpy as np
 from Dynamic.Online_orderbatch import online_order_batch,online_order_batch_FIFO
 from Dynamic.Online_ordersequence import solve_tsp_online
-from Dynamic.DEBUG_tool import DEBUG_log
+from Dynamic.DEBUG_tool import DEBUG_log,DEBUG_log_tag
 
 
 class procees_tsp_solver:
@@ -17,8 +17,8 @@ class procees_tsp_solver:
         self.node_point_y_x = None
         self.using_order_batch = "FIFO"
         self.using_order_sequence = "TSP_ONLINE"
-        self.init_batch_size = 6  # 초기에 로봇에게 할당할 배치사이즈
-        self.max_batch_size = 12  # interventionist방식에서 로봇에 대한 최대 배치사이즈(CAPACITY)
+        self.init_batch_size = 3  # 초기에 로봇에게 할당할 배치사이즈
+        self.max_batch_size = 6  # interventionist방식에서 로봇에 대한 최대 배치사이즈(CAPACITY)
         DEBUG_log("초기 배치사이즈 : " + str(self.init_batch_size) + " 최대 배치사이즈 : " + str(self.max_batch_size), "DETAIL")
 
     def run(self, order_data,solver_data,robot_data):
@@ -39,6 +39,8 @@ class procees_tsp_solver:
 
     def reset(self):
         #while 탈출 및 sub process를 죽입니다.
+        if self.sub_process ==None:
+            return
         self.solver_data["reset"] = True
         if self.sub_process.is_alive():
             self.sub_process.kill()
@@ -50,22 +52,23 @@ class procees_tsp_solver:
             if self.solver_data["reset"]:
                 break
             #로봇정보와 로봇의 대수를 가져옵니다.
-            robots, robot_number, current_robot_batch = self.get_robot_number_batches(robot_data)
+            robots, robot_number = self.get_robot_number_batches(robot_data)
             # order batch를 합니다.
             # 반환값 : batch된 주문의 인덱스, 바뀐 배치들, 배치가 바뀐 로봇의 인덱스
-            solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, current_robot_batch)
+            solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
             # 1. batch된 주문들을 현재 주문에서 없앱니다.
             self.delete_orders(order_data, solved_orders_index)
             # 2. 배치를 교체하고, tsp문제를 풀게합니다. 현재 위치가 반영되어야합니다.
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
         #-------------------추가된 부분---------------------
-    def solve_batch(self, current_orders, readonly_robot_data, readonly_current_robot_batch):
+            time.sleep(0.1)
+    def solve_batch(self, current_orders, readonly_robot_data, robot_data):
         readonly_orders = copy.deepcopy(current_orders["orders"])  # 읽을수만 있는 현재 최종 order를 가져옵니다.
         if self.using_order_batch == "FIFO":
             return online_order_batch_FIFO(readonly_orders,
                                            self.init_batch_size,
                                            self.max_batch_size,
-                                           readonly_current_robot_batch)
+                                           robot_data)
 
     def initalize(self, solver_data):
         ## dynamic order make
@@ -134,21 +137,19 @@ class procees_tsp_solver:
     def get_robot_number_batches(self, robot_data):
         robots = copy.deepcopy(robot_data['robot'])  # 로봇에 대한 정보를 담은 벡터를 가져온다.
         robot_number = robot_data["robot_info"][4]  # 로봇 대수
-        current_robot_batch = copy.deepcopy(robot_data['current_robot_batch'])
-        return robots, robot_number, current_robot_batch
+        return robots, robot_number
 
     def delete_orders(self, current_order, deleted_order):
         deleted_order.sort(reverse=True)
-        DEBUG_log("\n--------------------\n", "VERY_DETAIL")
-        DEBUG_log("제거해야하는 주문들", "VERY_DETAIL")
-        DEBUG_log(deleted_order, "VERY_DETAIL")
-        DEBUG_log("현재 주문들", "VERY_DETAIL")
-        DEBUG_log(current_order["orders"][0:5], "VERY_DETAIL")
         recent_orders = copy.deepcopy(current_order["orders"])
-        DEBUG_log("주문 갯수 : " + str(len(current_order["orders"])), "VERY_DETAIL")
         for order in deleted_order:
-
-            del recent_orders[order]
+            try :
+                del recent_orders[order]
+            except IndexError:
+                print("삭제하다가 에러발생")
+                print(recent_orders)
+                print(deleted_order)
+                print(order)
         current_order["orders"] = recent_orders
 
         DEBUG_log("삭제된 주문들", "VERY_DETAIL")
@@ -157,8 +158,12 @@ class procees_tsp_solver:
 
     def change_batch_and_solve_tsp(self, solved_batches,changed_robot_index,robot_data):
         #배치를 반영합니다
-        robot_data['current_robot_batch'] = solved_batches
-        DEBUG_log("경로를 수정하는 로봇들", "VERY_DETAIL")
+        for robot_ind in changed_robot_index:
+            temp = copy.deepcopy(robot_data["current_robot_batch"])
+            if len(solved_batches[robot_ind])==0:
+                print("배치하기에는 작습니다..")
+            temp[robot_ind] = solved_batches[robot_ind]
+            robot_data["current_robot_batch"] = temp
         DEBUG_log(changed_robot_index, "VERY_DETAIL")
         # DEBUG_log("주문 갯수 : " + str(len(current_order["orders"])), "VERY_DETAIL")
 

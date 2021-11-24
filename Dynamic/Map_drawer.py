@@ -2,11 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-
+import math
 class map_maker(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs)
-
         '''
         맵을 한번다시 그려서 저장하는 모듈 이제 쓸일없다.
         '''
@@ -25,12 +24,12 @@ class map_maker(QWidget):
         self.image = QImage(QSize(self.map_width,self.map_height),QImage.Format_RGB32)
         self.image.fill(Qt.white)
         self.ui_info = ui_info
-
         qp = QPainter()
         qp.begin(self.image)
         self.draw(qp)
         qp.end()
         self.image.save("./sim/"+map_image_name)
+
 
     def draw(self, qp):
         init_x = 0
@@ -47,11 +46,9 @@ class map_maker(QWidget):
         for i in range(self.map_resolution_2):
             res_y = int(init_y + (i + 1) * res_heigth)
             qp.drawLine(init_x, res_y, init_x + self.map_width, res_y)
-
         # 선반 그리기
         #마우스 좌표가 이전에 찍힌 위치를 기준으로 형성되어있음..초기선반위치는 0으로 하고 좌표에서 빼야함
         for ind, point in enumerate(self.saved_shelf_point):
-
             point_x = point[0] - self.ui_info[0]
             point_y = point[1] - self.ui_info[1]
             if point[2] == 0 or point[2] == 180:
@@ -68,7 +65,6 @@ class map_maker(QWidget):
             qp.setPen(QPen(QColor(189,189,189), 2))
             init_x = 0
             init_y = 0
-
             small_x_index = math.floor((lefttop[0] - init_x) / res_width)  # 맨왼쪽 포함
             big_x_index = math.ceil((rightbottom[0] - init_x) / res_width)
             small_y_index = math.floor((lefttop[1] - init_y) / res_heigth)
@@ -79,7 +75,6 @@ class map_maker(QWidget):
                     lefttop_y = init_y + res_heigth * i
                     qp.drawRect(lefttop_x, lefttop_y, res_width, res_heigth)
         # 벽그리기
-
         for ind, block_point in enumerate(self.saved_block_point):
 
             init_x = 0
@@ -97,7 +92,6 @@ class map_maker(QWidget):
             small_y_index = init_y + res_heigth * small_y_index
             # big_y_index = init_y + res_heigth * big_y_index
             qp.drawRect(small_x_index, small_y_index, res_width, res_heigth)
-
         # 시작지점그리기
         for ind, block_point in enumerate(self.saved_sp_point):
             init_x = 0
@@ -115,7 +109,6 @@ class map_maker(QWidget):
             small_y_index = init_y + res_heigth * small_y_index
             big_y_index = init_y + res_heigth * big_y_index
             qp.drawRect(small_x_index, small_y_index, res_width, res_heigth)
-
         # 패킹지점그리기
         for ind, block_point in enumerate(self.saved_pk_point):
             init_x = 0

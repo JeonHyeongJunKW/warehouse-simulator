@@ -1,4 +1,4 @@
-LEVEL = "SIMPLE"# NONE, SIMPLE, DETAIL
+LEVEL = "NONE"# NONE, SIMPLE, DETAIL
 
 
 def DEBUG_log(s,s_level ="SIMPLE"):
