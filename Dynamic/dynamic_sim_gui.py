@@ -8,6 +8,7 @@ from Dynamic.process_tsp_solver import procees_tsp_solver
 from Dynamic.process_robot_mover import procees_robot_mover
 from Dynamic.DEBUG_tool import DEBUG_log
 from Dynamic.Dynamic_viewer import online_simulator
+from Dynamic.result_view import result_sim_view
 import time
 
 class Dynamic_Sim(QWidget):
@@ -41,6 +42,9 @@ class Dynamic_Sim(QWidget):
 
 
         self.buttonRealView.clicked.connect(self.Real_Simulation_Start)
+        self.buttonResultView.clicked.connect(self.Result_Simulation_Start)
+
+        self.result_sim_view = result_sim_view()
 
     def start(self,map_data,sim_data,ui_data):
 
@@ -85,6 +89,7 @@ class Dynamic_Sim(QWidget):
         self.gui_data["map_data"] = self.map_data
         self.gui_data["ui_data"] = self.ui_data
         self.buttonRealView.setEnabled(True)
+        self.buttonResultView.setEnabled(True)
 
     def Real_Simulation_Start(self):
         self.initialize()
@@ -102,10 +107,19 @@ class Dynamic_Sim(QWidget):
 
         self.gui_simulation.run(self.gui_data)
 
+    def Result_Simulation_Start(self):
+        self.result_sim_view.initialize(self.map_data,# 기본데이터셋 초기화
+                                        self.ui_data,
+                                        self.sim_data)
+        self.initialize_viewer()#기본적인 시뮬레이션 파라미터 초기화
+        self.result_sim_view.start()#실질적인 구동
+
+
     def closeEvent(self, QCloseEvent):
         self.process_order_maker.reset()
         self.process_tsp_solver.reset()
         self.process_robot_mover.reset()
+
 
     def initialize(self):
         self.process_order_maker.init_ordernum = int(
@@ -123,4 +137,19 @@ class Dynamic_Sim(QWidget):
             self.le_init_batch_size.text()) if self.le_init_batch_size.text().isdigit() else 2
         self.process_tsp_solver.max_batch_size = int(
             self.le_max_batch_size.text()) if self.le_max_batch_size.text().isdigit() else 4
+        self.process_tsp_solver.max_order = int(
+            self.le_max_ordercall.text()) if self.le_max_ordercall.text().isdigit() else 50
+
+    def initialize_viewer(self):
+        self.result_sim_view.set_param(
+            int(self.le_init_ordernum.text()) if self.le_init_ordernum.text().isdigit() else 0,
+            int(self.le_update_ordernum.text()) if self.le_update_ordernum.text().isdigit() else 2,
+            int(self.le_max_itemnum.text()) if self.le_max_itemnum.text().isdigit() else 4,
+            int(self.le_max_ordercall.text()) if self.le_max_ordercall.text().isdigit() else 50,
+            int(self.le_robotnum.text()) if self.le_robotnum.text().isdigit() else 3,
+            int(self.le_init_batch_size.text()) if self.le_init_batch_size.text().isdigit() else 2,
+            int(self.le_max_batch_size.text()) if self.le_max_batch_size.text().isdigit() else 4,
+            int(self.le_max_ordercall.text()) if self.le_max_ordercall.text().isdigit() else 50)
+
+
 

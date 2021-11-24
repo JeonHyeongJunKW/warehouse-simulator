@@ -19,8 +19,17 @@ class procees_tsp_solver:
         self.using_order_sequence = "TSP_ONLINE"
         self.init_batch_size = 3  # 초기에 로봇에게 할당할 배치사이즈
         self.max_batch_size = 6  # interventionist방식에서 로봇에 대한 최대 배치사이즈(CAPACITY)
+        self.all_mission_clear = False
+        self.max_order =1000
+        self.order_counter =0
+        self.start_time =0
+        
         DEBUG_log("초기 배치사이즈 : " + str(self.init_batch_size) + " 최대 배치사이즈 : " + str(self.max_batch_size), "DETAIL")
+        
+        self.algorithm_time = 0.0
+        self.algorithm_count = 0
 
+        self.work_time = 0
     def run(self, order_data,solver_data,robot_data):
         self.order_data = order_data
         self.solver_data = solver_data
@@ -47,21 +56,25 @@ class procees_tsp_solver:
 
     def process(self,order_data, solver_data,robot_data):
         self.initalize(solver_data)#각 노드의 좌표를 변형합니다.
-
+        self.start_time = time.time()
         while True:
             if self.solver_data["reset"]:
                 break
             #로봇정보와 로봇의 대수를 가져옵니다.
             robots, robot_number = self.get_robot_number_batches(robot_data)
-            # order batch를 합니다.
-            # 반환값 : batch된 주문의 인덱스, 바뀐 배치들, 배치가 바뀐 로봇의 인덱스
             solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
-            # 1. batch된 주문들을 현재 주문에서 없앱니다.
+            #다끝났는지 확인하는 법.. 일단. 더이상 order를 생성 못해야함. orders도 확인해야함. 모든 로봇들이 새로운 배치를 기다리는지도 확인해야함.
+            self.is_simulation_end(solved_orders_index, changed_robot_index,robot_data)
+            if self.all_mission_clear:
+                self.work_time = time.time()-self.start_time
+                break
             self.delete_orders(order_data, solved_orders_index)
-            # 2. 배치를 교체하고, tsp문제를 풀게합니다. 현재 위치가 반영되어야합니다.
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
         #-------------------추가된 부분---------------------
             time.sleep(0.1)
+        self.save_result(robot_data)
+
+
     def solve_batch(self, current_orders, readonly_robot_data, robot_data):
         readonly_orders = copy.deepcopy(current_orders["orders"])  # 읽을수만 있는 현재 최종 order를 가져옵니다.
         if self.using_order_batch == "FIFO":
@@ -168,4 +181,36 @@ class procees_tsp_solver:
         # DEBUG_log("주문 갯수 : " + str(len(current_order["orders"])), "VERY_DETAIL")
 
         if self.using_order_sequence == "TSP_ONLINE":
-            solve_tsp_online(changed_robot_index,robot_data,self.node_point_y_x)
+            additional_time, additional_count = solve_tsp_online(changed_robot_index,robot_data,self.node_point_y_x)
+            self.algorithm_time += additional_time
+            self.algorithm_count += additional_count
+
+    def is_simulation_end(self,solved_orders_index, changed_robot_index,robot_data):
+        self.order_counter += len(solved_orders_index)
+        if self.max_order == self.order_counter:
+            if len(changed_robot_index) ==0:
+                flag_check = True
+                for move in robot_data['stop']:
+                    if not move:
+                        flag_check = False
+                        break
+
+                if flag_check:
+                    self.all_mission_clear = True
+    def save_result(self,robot_data):
+        robot_data["full_algorithm_time"] = self.algorithm_count
+        robot_data["full_algorithm_count"] = self.algorithm_time
+        robot_data["completion_time"] = self.work_time
+        temp_list = []
+        for robot in robot_data["robot"]:
+            temp_list.append(robot.step)
+        robot_data["robot_step"] = temp_list
+        #이제 하나 끝났습니다.
+        print(robot_data["full_algorithm_time"])
+        print(robot_data["full_algorithm_count"])
+        print(robot_data["completion_time"])
+        print(robot_data["robot_step"])
+        robot_data["the_end"] = True
+
+                    
+

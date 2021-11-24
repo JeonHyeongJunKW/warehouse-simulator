@@ -40,12 +40,10 @@ class procees_robot_mover:
     def initialize_robot(self,robot_data, gui_data):
         #로봇 초기화를 위한 파라미터들
         self.robot_data = robot_data
-
         robot_cap = self.robot_data["robot_info"][3]
         robot_number = self.robotnum
         init_map_x = self.robot_data["ui_data"][0]
         init_map_y = self.robot_data["ui_data"][1]
-
         map_data = self.robot_data['map_data']
         saved_pk_point = map_data['pack_point']
         map_width = map_data['map_size'][0]
@@ -97,7 +95,6 @@ class procees_robot_mover:
                                     packing_station_ind=packing_ind + 20001, current_point=current_pose)
 
             robots.append(robot)
-
         self.robot_data['robot'] =robots# W_Robot객체를 저장합니다.
         self.robot_data['current_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
         self.robot_data['past_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇에게 할당된 배치입니다.
@@ -117,4 +114,9 @@ class procees_robot_mover:
         gui_data["packing_point"] = saved_pk_point
         gui_data["packing_ind"] = robot_ind
         gui_data["zero_robot_pick_point"] = []
-
+        ##------------------------------------시뮬레이션 결과를 저장하기 위한 부분---------------------------------------
+        self.robot_data["the_end"] = False
+        self.robot_data["full_algorithm_time"] =0
+        self.robot_data["full_algorithm_count"] = 0
+        self.robot_data["completion_time"] = 0
+        self.robot_data["robot_step"] = [0 for _ in range(len(robot_data['robot']))]

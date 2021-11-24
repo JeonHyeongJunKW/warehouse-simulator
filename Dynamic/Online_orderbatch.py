@@ -1,6 +1,7 @@
 from Dynamic.DEBUG_tool import DEBUG_log,DEBUG_log_tag
 import copy
 def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, robot_data):
+
     #로봇들이 기본적인 할당량을 가지고 있는지 확인하고,
     solved_orders_index = []
     readonly_current_robot_batch = copy.deepcopy(robot_data["current_robot_batch"])#현재의 로봇배치를 넣는다.

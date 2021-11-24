@@ -109,7 +109,6 @@ class main_drawer(QLabel):
                 qp.setBrush(QColor(255, 187, 0))
                 qp.setPen(QPen(QColor(189, 189, 189), 2))
                 for ind in self.gui_data["zero_robot_pick_point"]:
-
                     point = self.shelfs[ind]
                     if point[2] == 0 or point[2] == 180:
                         lefttop = [point[0] - int(point[3] / 2),
@@ -136,13 +135,18 @@ class main_drawer(QLabel):
             qp.setPen(QPen(QColor(189,189,189), 2))
             #로봇의 현재 목표점을 그립니다.
             if self.is_view_target:
-                for i, [y, x] in enumerate(goal_cordinates):
-                    qp.setBrush(QColor(255, 0, 0))
+                for i, point in enumerate(goal_cordinates):
+                    if len(point)==2:
+                        x = point[1]
+                        y = point[0]
+                        qp.setBrush(QColor(255, 0, 0))
 
-                    qp.drawRect(self.map_width / self.map_resolution * x,
-                                self.map_height / self.map_resolution_2 * y,
-                                self.map_width / self.map_resolution,
-                                self.map_height / self.map_resolution_2)
+                        qp.drawRect(self.map_width / self.map_resolution * x,
+                                    self.map_height / self.map_resolution_2 * y,
+                                    self.map_width / self.map_resolution,
+                                    self.map_height / self.map_resolution_2)
+                    else:
+                        continue
 
             for i, [x,y] in enumerate(packing_point):
                 color = packing_color[i]

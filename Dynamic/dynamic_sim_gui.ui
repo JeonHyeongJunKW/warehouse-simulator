@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>파라미터 조정창</string>
   </property>
   <widget class="QPushButton" name="buttonRealView">
    <property name="enabled">
@@ -37,7 +37,7 @@
     <string>실제 동작 확인하기</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="buttonRealView_2">
+  <widget class="QPushButton" name="buttonResultView">
    <property name="enabled">
     <bool>false</bool>
    </property>

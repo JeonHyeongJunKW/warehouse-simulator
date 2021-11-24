@@ -2,6 +2,7 @@ import numpy as np
 import math
 from Dynamic.DEBUG_tool import DEBUG_log_tag
 import random
+import time
 
 def static_aco_tsp_solver(current_position,packing_position,tsp_node, node_point_y_x):
     alpha = 1  # 페로몬 가중치

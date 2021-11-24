@@ -2,7 +2,7 @@ from Dynamic.DEBUG_tool import DEBUG_log_tag,DEBUG_log
 import copy
 import numpy as np
 from Dynamic.tsp_solver_for_online import static_aco_tsp_solver
-
+import time
 
 def update_tsp_node(robot_data,robot_index):
     # 로봇의 과거배치를 받습니다.
@@ -53,6 +53,8 @@ def recovery(recovery_param,point):
 
 def solve_tsp_online(changed_robot_index,robot_data,node_point_y_x):
     DEBUG_log("-----SOLVE TSP : Independent------","DETAIL")
+    additional_time =0
+    additional_count =0
     for changed_robot in changed_robot_index:
         # 로봇을 멈춥니다.
 
@@ -80,10 +82,13 @@ def solve_tsp_online(changed_robot_index,robot_data,node_point_y_x):
         tsp_node = update_tsp_node(robot_data, changed_robot)
 
         #현재 시작 위치(노드)에 대해서 tsp문제를 풉니다.
-        optimized_path = static_aco_tsp_solver(current_coordinate,
+        start_time = time.time()
+        optimized_path= static_aco_tsp_solver(current_coordinate,
                                                packing_coordinate,
                                                tsp_node,
                                                node_point_y_x)
+        additional_time +=(time.time()-start_time)
+        additional_count +=1
         #경로를 등록합니다.
         temp = copy.deepcopy(robot_data["optimal_path"])
         temp[changed_robot] = optimized_path
@@ -98,6 +103,8 @@ def solve_tsp_online(changed_robot_index,robot_data,node_point_y_x):
         temp = copy.deepcopy(robot_data['new_batch'])
         temp[changed_robot] = True
         robot_data['new_batch'] = temp  # 로봇이 달리게만들어버림..
+
+    return additional_time, additional_count
 
 
 

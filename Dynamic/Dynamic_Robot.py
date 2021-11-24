@@ -29,6 +29,8 @@ class W_Robot:
         self.past_observe = []
         self.am_i_say_goal =False
         self.mission_clear =0
+        #---------------------------------------------시뮬레이션 결과를 위해서 사용됩니다.----------------------------------
+        self.step = 0
     def astar_move(self):
         find_goal = False
 
@@ -134,6 +136,7 @@ class W_Robot:
     def update_robot_pos(self,next_pos):
         self.prev_point = [self.current_point[0], self.current_point[1]]
         # 현재 경로를 갱신하는부분
+        self.step +=1
         self.current_point[0] = next_pos[0]
         self.current_point[1] = next_pos[1]
 
