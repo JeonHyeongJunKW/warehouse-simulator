@@ -84,7 +84,8 @@
 - 실행 후, '맵 불러오기' 버튼을 누르면, 시물레이션 맵으로 설정됩니다. 
 
 ### 추가내역 
-- 21-11-21 Dynamic tsp와 online order picking을 위한 시뮬레이션 추가 
+- 21-11-21 Dynamic tsp와 online order picking을 위한 시뮬레이션 추가
+- 21-11-23 GUI추가 및 파라미터 조정파트 생성. 
 
 <a name="footnote_1">[1] Task allocation </a>: 비슷한 작업을 묶어서 멀티 로봇에게 실시간으로 작업을 분배 
 
