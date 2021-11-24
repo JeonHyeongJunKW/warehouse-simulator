@@ -103,6 +103,7 @@ class procees_robot_mover:
         self.robot_data['optimal_path'] = [[] for _ in range(len(robot_data['robot']))]#현재 로봇에 대한 최적경로
         self.robot_data['new_batch'] = [False for _ in range(len(robot_data['robot']))]  # 현재 로봇에 대한 최적경로
         self.robot_data["packing_pose_recovery"] = [init_map_y,init_map_x,res_width,res_height]
+        self.robot_data["robot_coordinates"] = []  # 로봇의 위치
         ##------------------------------------GUI를 그리기 위한 부분--------------------------------------------------
         gui_data["current_robot_position"] = [[0, 0] for _ in range(len(robot_data['robot']))]# 로봇의 현재 위치
         gui_data["short_path"] = [[] for _ in range(len(robot_data['robot']))]# 로봇의 과거 위치

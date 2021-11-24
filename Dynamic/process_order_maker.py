@@ -46,7 +46,6 @@ class procees_order_maker:
         order_data["orders"] = [list(set([random.choice(list(range(kind))) for _ in range(order_size)])) for __ in
                                 range(initOrder)]
         order_count =initOrder
-        end_flag = False
         while True:
             if order_data["reset"]:
                 break
@@ -54,9 +53,6 @@ class procees_order_maker:
             if order_count <self.max_ordercall:
                 order_count += order_rate
             else:
-                if not end_flag:
-                    print("히히 이젠 못받아!")
-                end_flag =True
                 continue
             time.sleep(1)
             new_order = [list(set([random.choice(list(range(kind))) for _ in range(order_size)])) for __ in

@@ -1,7 +1,7 @@
 import time
 from Astar import *
 import copy
-
+import random
 class W_Robot:
     def __init__(self,capacity,packing_station,packing_station_ind,current_point,property=None):
         self.capcity = capacity
@@ -31,13 +31,68 @@ class W_Robot:
         self.mission_clear =0
         #---------------------------------------------시뮬레이션 결과를 위해서 사용됩니다.----------------------------------
         self.step = 0
-    def astar_move(self):
-        find_goal = False
 
-        #로봇이 앞으로 갈 지점을 얻습니다.
+    def astar_move(self, pre_another, another, control_check, robot_ind):
+        find_goal = False
+        pos = [0, 0]
+        move_control = [[0, 0], [1, 0], [0, 1], [0, -1], [-1, 0]]
+        random.shuffle(move_control)
+
+        # 로봇이 앞으로 갈 지점을 얻습니다.
         next_pos = self.get_next_robot_pos()
 
-        #로봇의 포즈를 업데이트합니다.
+        # 이전 위치의 index를 획득
+        if self.astar_ind - 1 < 0:
+            pre_ind = 0
+        else:
+            pre_ind = self.astar_ind - 1
+
+        pre_pos = list(self.astar_route[pre_ind])
+        next_pos = list(self.astar_route[self.astar_ind])  # astar_ind를 기반으로 하여 바뀐 위치 아직 실제 로봇에 적용은 안함.
+
+        if next_pos in pre_another:
+            prior_ind = pre_another.index(next_pos)
+            exc_control = [control_check[prior_ind][i] - pre_pos[i] for i in range(len(pre_pos))]
+
+            if robot_ind != prior_ind:
+                # print("robot_ind, prior_ind = ", robot_ind, prior_ind)
+                # print("exc_control = ", exc_control)
+                for control in move_control:
+                    # print("next_pos, control =", next_pos, control)
+                    pos[0] = pre_pos[0] + control[0]
+                    pos[1] = pre_pos[1] + control[1]
+
+                    if self.occupy_map[pos[0]][
+                        pos[1]] == 0 and pos != next_pos and pos not in another and control != exc_control:
+                        # print("avoid_robot_ind = ", robot_ind)
+                        next_pos[0] = pos[0]
+                        next_pos[1] = pos[1]
+                        self.astar_route.insert(self.astar_ind, pre_pos)
+                        self.astar_route.insert(self.astar_ind, next_pos)
+
+                        break
+
+            else:
+                self.astar_ind += 1
+
+        elif next_pos in another:
+            prior_ind = another.index(next_pos)
+            # if robot_ind < prior_ind:
+            for control in move_control:
+                pos[0] = pre_pos[0] + control[0]
+                pos[1] = pre_pos[1] + control[1]
+                # print("check show motion =", control)
+                if self.occupy_map[pos[0]][pos[1]] == 0 and pos != next_pos:
+                    # print("checkcheck_what")
+                    next_pos[0] = pos[0]
+                    next_pos[1] = pos[1]
+                    self.astar_route.insert(self.astar_ind, next_pos)
+                    break
+
+        else:
+            self.astar_ind += 1
+
+        # 로봇의 포즈를 업데이트합니다.
         self.update_robot_pos(next_pos)
 
         # 다음 주변 점을 확인해서, 목표지점이 있는지 확인합니다.
@@ -121,7 +176,7 @@ class W_Robot:
             print(self.picking_point[self.last_picking_shelf_index + 1])
             print(self.occupy_map[self.goal_point[0]][self.goal_point[1]])
             print("내가 도달했니? 밖에서 문제니?",self.packing_point_arrive)
-        self.astar_ind += 1
+        #self.astar_ind += 1
         return robot_point
 
     def observe_8_neigh(self,next_pos):

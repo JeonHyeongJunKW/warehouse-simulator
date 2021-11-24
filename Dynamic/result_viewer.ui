@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>974</width>
-    <height>558</height>
+    <width>752</width>
+    <height>706</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>결과창</string>
   </property>
-  <widget class="QProgressBar" name="progressBar">
+  <widget class="QProgressBar" name="pb_getResult">
    <property name="geometry">
     <rect>
      <x>70</x>
@@ -45,42 +45,97 @@
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>20</x>
      <y>50</y>
-     <width>891</width>
-     <height>481</height>
+     <width>721</width>
+     <height>641</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>맑은 고딕</family>
-     <pointsize>13</pointsize>
+     <pointsize>11</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>3</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
      <string>시뮬레이션 환경</string>
     </attribute>
+    <widget class="QLabel" name="lb_simImage">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>700</width>
+       <height>500</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
      <string>알고리즘별 평균 연산 시간</string>
     </attribute>
+    <widget class="QLabel" name="lb_mean_time">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>30</y>
+       <width>600</width>
+       <height>550</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_3">
     <attribute name="title">
      <string>알고리즘별 수행시간</string>
     </attribute>
+    <widget class="QLabel" name="lb_complete_time">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>30</y>
+       <width>600</width>
+       <height>550</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">
      <string>알고리즘별 이동 거리</string>
     </attribute>
+    <widget class="QLabel" name="lb_move_time">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>30</y>
+       <width>600</width>
+       <height>550</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
   </widget>
  </widget>

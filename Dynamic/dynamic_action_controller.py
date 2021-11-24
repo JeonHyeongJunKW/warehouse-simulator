@@ -69,32 +69,40 @@ def gui_data_update(robots, gui_data,robot_data):
     gui_data["zero_robot_pick_point"] = temp_gui_data["zero_robot_pick_point"]
 
 
-
-
 def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
     # 로봇 데이터를 기반으로 하여 현재 로봇을 움직인다.
     DEBUG_log("로봇 제어 시작.")
     robots = copy.deepcopy(robot_data['robot'])  # 임시 로봇을 가져온다.
+
+
     self_rebatch_flag = [True for _ in range(len(robots))]
+
     while True:
         start = time.time()
-
+        robot_coordinates = []
+        pre_coordinates = copy.deepcopy(robot_data["robot_coordinates"])
+        prec_coordinates = copy.deepcopy(pre_coordinates)
 
         robots = copy.deepcopy(robot_data['robot'])#임시 로봇을 가져온다.
         if robot_data["reset"]:
             break
         for robot_ind in range(len(robots)):
+
             # print("로봇은 멈춰야하는가 ?",robot_data['stop'][robot_ind])
-            #로봇이 멈춰야한다면 움직이지 않는다.
+            # 로봇이 멈춰야한다면 움직이지 않는다.
             if robot_data['stop'][robot_ind]:#바로 True로 갈수도 있다..
+
                 self_rebatch_flag[robot_ind] = True#멈추는 플래그가 열리면, rebatch가 True가된다.
+                robot_coordinates.append([0, 0])
                 continue
+
             else:
-            #로봇이 움직여야한다면
+            # 로봇이 움직여야한다면
                 robot = robots[robot_ind]
-                #만약에 로봇이 새로운 배치를 할당받앗다면
+                # 만약에 로봇이 새로운 배치를 할당받앗다면
+
                 if self_rebatch_flag[robot_ind] or robot_data['new_batch'][robot_ind]:
-                    #주의!) 안멈추고 바로 새로운 배치가 할당될 수 있음. 다음 for문에서 self_rebatch_flag[robot_ind] = True가 되기전에 새 배치 할당 가능
+                    # 주의!) 안멈추고 바로 새로운 배치가 할당될 수 있음. 다음 for문에서 self_rebatch_flag[robot_ind] = True가 되기전에 새 배치 할당 가능
                     self_rebatch_flag[robot_ind] = False
 
                     temp = copy.deepcopy(robot_data['new_batch'])
@@ -108,22 +116,31 @@ def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
                     robots[robot_ind] = robot
 
 
-                    #Astar 경로 초기화 목표 노드 재설정
-                robot.astar_move()
+                    # Astar 경로 초기화 목표 노드 재설정
+                robot.astar_move(pre_coordinates, robot_coordinates, prec_coordinates, robot_ind)
+                if len(pre_coordinates) == len(robots):
+                    pre_coordinates[robot_ind] = robot.current_point
+
+
+
                 # 배치에 사용할 정보입니다.
                 temp = robot_data['already_gone_node']
                 temp[robot_ind]= copy.copy(robot.already_gone_node)
                 robot_data['already_gone_node'] =temp
                 if robot.packing_point_arrive:
                     robot.packing_point_arrive = False
-                    restart_robot(robot_data,robot,robot_ind)
+                    restart_robot(robot_data, robot, robot_ind)
                     temp2 = copy.deepcopy(gui_data["long_path"])
                     temp2[robot_ind] = []
                     gui_data["long_path"] = temp2
 
+            robot_coordinates.append(robot.current_point)
+
+        robot_data["robot_coordinates"] = robot_coordinates
+
         # DEBUG_log_tag("할당된 배치들", robot_data["current_robot_batch"])
         # GUI 업데이트
-        gui_data_update(robots, gui_data,robot_data)
+        gui_data_update(robots, gui_data, robot_data)
         #시간 동기화
         want_time = 0.1
         real_time = want_time - (time.time() - start)
@@ -131,5 +148,3 @@ def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
             time.sleep(real_time)
         #로봇 업데이트
         robot_data['robot'] = robots
-
-

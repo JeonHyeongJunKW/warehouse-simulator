@@ -206,10 +206,6 @@ class procees_tsp_solver:
             temp_list.append(robot.step)
         robot_data["robot_step"] = temp_list
         #이제 하나 끝났습니다.
-        print(robot_data["full_algorithm_time"])
-        print(robot_data["full_algorithm_count"])
-        print(robot_data["completion_time"])
-        print(robot_data["robot_step"])
         robot_data["the_end"] = True
 
                     
