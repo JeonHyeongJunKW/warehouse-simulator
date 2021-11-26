@@ -158,9 +158,15 @@ def Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size):
            item_min_distance.append(distance)
         item_dis = np.array(item_min_distance)
         same_batch_ind = np.argsort(item_dis).tolist()[:init_batch_size-1]
-        # print("마지막 거리", item_dis[same_batch_ind[-1]]/len(seed_order_ind))
-        if item_dis[same_batch_ind[-1]]/len(seed_order_ind) >distance_bound:
+        if len(same_batch_ind) ==0:
             continue
+        # print("마지막 거리", item_dis[same_batch_ind[-1]]/len(seed_order_ind))
+        try:
+            if item_dis[same_batch_ind[-1]]/len(seed_order_ind) >distance_bound:
+                continue
+        except IndexError:
+            print(same_batch_ind,"문제")
+            print(item_dis,"문제")
         else :
             #현재 seed order(i)에 대해서, same_batch_ind에 속하는 order를 찾아서 하나로 묶는다.
             seed_order_last = i

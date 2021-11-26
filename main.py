@@ -201,15 +201,15 @@ if __name__ == "__main__":
         sim_data['Computation_time'] = [0. for _ in range(len(sim_data['solver_set']))]
         sim_data["force_die"] = False
         sim_data["doing_order"] =0
-        order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
-        warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
-        warehouse_fast_solver = Process(target=process_Fast_sim, args=(sim_data, order_data))
+        # order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
+        # warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
+        # warehouse_fast_solver = Process(target=process_Fast_sim, args=(sim_data, order_data))
         # order_maker.start()
         # warehouse_tsp_solver.start()
         # warehouse_fast_solver.start()
         #GUI를 담당하는 프로세스 입니다.
         myWindow = WindowClass()
-        myWindow.getProcess(order_maker,warehouse_fast_solver,warehouse_tsp_solver)
+        # myWindow.getProcess(order_maker,warehouse_fast_solver,warehouse_tsp_solver)
         myWindow.set_data(order_data,sim_data)
         myWindow.show()
         sys.exit(app.exec_())

@@ -51,14 +51,12 @@ class procees_tsp_solver:
 
     def reset(self):
         #while 탈출 및 sub process를 죽입니다.
-        print("나냐")
         if self.sub_process ==None:
             return
         self.solver_data["reset"] = True
-        print("hello")
         if self.sub_process.is_alive():
             self.sub_process.kill()
-            print("i killed")
+
 
     def process(self,order_data, solver_data,robot_data):
         self.initalize(solver_data)#각 노드의 좌표를 변형합니다.
@@ -77,7 +75,7 @@ class procees_tsp_solver:
             self.delete_orders(order_data, solved_orders_index)
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
         #-------------------추가된 부분---------------------
-            time.sleep(0.5)
+            time.sleep(0.1)
         self.save_result(robot_data)
 
 
@@ -217,7 +215,10 @@ class procees_tsp_solver:
         temp_list = []
         for robot in robot_data["robot"]:
             temp_list.append(robot.step)
-        robot_data["robot_step"] = temp_list
+        robot_data["robot_step"] = copy.deepcopy(temp_list)
+        self.algorithm_time =0
+        self.algorithm_count =0
+        self.work_time = 0
         #이제 하나 끝났습니다.
         robot_data["the_end"] = True
 

@@ -58,8 +58,8 @@ class result_sim_view(QWidget):
         self.process_tsp_solver.reset()
         self.process_robot_mover.reset()
         self.timer.start(100)
-
         self.robot_mover_data["the_end"] = True
+
 
 
     def redo_check(self):
@@ -70,13 +70,14 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
-                self.process_tsp_solver ="HCOB"
+                self.process_tsp_solver.using_order_batch ="HCOB"
             elif self.sim_count==2:
                 self.pb_getResult.setValue(66)
                 self.saved_result.append([self.robot_mover_data["full_algorithm_time"],
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
+            self.robot_mover_data["the_end"] = True
             self.run()
 
 
@@ -98,21 +99,15 @@ class result_sim_view(QWidget):
     def run(self):
 
         self.process_order_maker.reset()
-        print("hi")
         self.process_tsp_solver.reset()
-        print("hi")
         self.process_robot_mover.reset()
-        print("hi")
         self.process_robot_mover.initialize_robot(self.robot_mover_data, self.gui_data)
-        print("hi")
         self.process_order_maker.run(self.order_worker_data)
-        print("hi")
         # 초기화된 robot_mover_data를 이용합니다.
         self.process_tsp_solver.run(self.order_worker_data,
                                     self.tsp_solver_data,
                                     self.robot_mover_data)
         self.process_robot_mover.run(self.gui_data)
-        print("hi")
 
         self.gui_simulation = online_simulator()
 
@@ -180,7 +175,7 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
         '''
-        algorithm_name = ['FCFS & O-ACO', "HOOB & O-ACO", "HOOB & OD-ACO"]
+        algorithm_name = ['FCFS & O-ACO', "HCOB & O-ACO", "HCOB & OD-ACO"]
         algorithm_color = ['black', 'red', 'gold']
         fig = plt.figure(figsize=(6, 5.5))
         plt.title("Average Algorithm time", fontsize=12)
@@ -226,7 +221,6 @@ class result_sim_view(QWidget):
         self.qPixmapVar = QPixmap()
         self.qPixmapVar.load("result/평균 알고리즘 시간.png")
         self.qPixmapVar = self.qPixmapVar.scaled(self.lb_mean_time.width(), self.lb_mean_time.height(), Qt.KeepAspectRatio)
-        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_tet.width(), self.label_tet.height())
         self.lb_mean_time.setPixmap(self.qPixmapVar)
 
         self.qPixmapVar = QPixmap()
@@ -237,5 +231,4 @@ class result_sim_view(QWidget):
         self.qPixmapVar = QPixmap()
         self.qPixmapVar.load("result/이동거리 박스플롯.png")
         self.qPixmapVar = self.qPixmapVar.scaled(self.lb_move_time.width(), self.lb_move_time.height(), Qt.KeepAspectRatio)
-        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_atd.width(), self.label_atd.height())
         self.lb_move_time.setPixmap(self.qPixmapVar)

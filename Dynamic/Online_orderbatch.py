@@ -35,9 +35,9 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
                 assigned_flag[robot_index] = True
         elif len(readonly_orders)-start_order < init_batch_size:
             # print("현재 배치의 오더 배치들",solved_batches)
-            print("이번 step에 풀린 index : ", solved_orders_index)
-            print("현재까지 풀린 배치들 : ", solved_batches)
-            print("배치가 수정된 로봇들 : ", changed_robot_index)
+            # print("이번 step에 풀린 index : ", solved_orders_index)
+            # print("현재까지 풀린 배치들 : ", solved_batches)
+            # print("배치가 수정된 로봇들 : ", changed_robot_index)
             return solved_orders_index,solved_batches,changed_robot_index
         #큰일날 수 있는부분..
         elif len(robot_batch) ==0:
@@ -92,9 +92,9 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     DEBUG_log(solved_batches,"VERY_DETAIL")
     DEBUG_log("바뀐로봇들 일부", "DETAIL")
     # DEBUG_log(changed_robot_index[0:1],"DETAIL")
-    print("이번 step에 풀린 index : ", solved_orders_index)
-    print("현재까지 풀린 배치들 : ", solved_batches)
-    print("배치가 수정된 로봇들 : ", changed_robot_index)
+    # print("이번 step에 풀린 index : ", solved_orders_index)
+    # print("현재까지 풀린 배치들 : ", solved_batches)
+    # print("배치가 수정된 로봇들 : ", changed_robot_index)
     return solved_orders_index,solved_batches,changed_robot_index
 
 def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, robot_data, node_point_y_x):
@@ -229,7 +229,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                         Do_save_in_Queue()# 아직 애매한 배치면 저장해버린다.
                         # print("16. 대기중인 로봇에 넣으려고 했는데, 너무 안어울려")
                 else:
-                    print("17. 전부 일하는중이야")
+                    # print("17. 전부 일하는중이야")
                     Do_save_in_Queue()# 아직 애매한 배치면 저장하지 않는다.
         else:#새로운 주문이 없다면
             # print("18. 새로운 주문이 없어")
