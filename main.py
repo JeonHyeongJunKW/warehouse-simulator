@@ -185,6 +185,7 @@ if __name__ == "__main__":
         order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
         order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
         order_data["len_order"] =0
+        order_data["end_flag"] = False
 
         #연속적인 시물레이션 사용간에 사용되는 변수들
         sim_data['solver_set'] = ['NO_TSP',"DC","GREEDY","PSO","GA","ACO"]

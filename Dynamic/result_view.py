@@ -37,6 +37,7 @@ class result_sim_view(QWidget):
         DEBUG_log("tsp solver 초기화가 끝났습니다.")
         self.process_robot_mover = procees_robot_mover()  # 로봇들에 대한 움직임을 처리하는 프로세스, 로봇 데이터에 대한 초기화가 이루어진다.
         DEBUG_log("robot 무브메이커 초기화가 끝났습니다.")
+        # self.result_sim_view = result_sim_view()
         # 시각적으로 그려주는 GUI 위젯
         self.gui_simulation = None
         self.gui_data = Manager().dict()
@@ -69,6 +70,7 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
+                self.process_tsp_solver ="HCOB"
             elif self.sim_count==2:
                 self.pb_getResult.setValue(66)
                 self.saved_result.append([self.robot_mover_data["full_algorithm_time"],
@@ -94,19 +96,27 @@ class result_sim_view(QWidget):
 
 
     def run(self):
+
         self.process_order_maker.reset()
+        print("hi")
         self.process_tsp_solver.reset()
+        print("hi")
         self.process_robot_mover.reset()
-
+        print("hi")
         self.process_robot_mover.initialize_robot(self.robot_mover_data, self.gui_data)
-
+        print("hi")
         self.process_order_maker.run(self.order_worker_data)
+        print("hi")
         # 초기화된 robot_mover_data를 이용합니다.
         self.process_tsp_solver.run(self.order_worker_data,
                                     self.tsp_solver_data,
                                     self.robot_mover_data)
         self.process_robot_mover.run(self.gui_data)
+        print("hi")
 
+        self.gui_simulation = online_simulator()
+
+        self.gui_simulation.run(self.gui_data)
     def initialize(self,map_data,ui_data,sim_data):
         self.show()
 

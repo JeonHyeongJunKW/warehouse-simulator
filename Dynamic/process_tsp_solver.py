@@ -3,7 +3,7 @@ import math
 from multiprocessing import Process
 import copy
 import numpy as np
-from Dynamic.Online_orderbatch import online_order_batch,online_order_batch_FIFO
+from Dynamic.Online_orderbatch import *
 from Dynamic.Online_ordersequence import solve_tsp_online
 from Dynamic.DEBUG_tool import DEBUG_log,DEBUG_log_tag
 
@@ -35,7 +35,10 @@ class procees_tsp_solver:
         self.solver_data = solver_data
         self.robot_data = robot_data
         self.solver_data["reset"] = False  # 리셋플레그를 false로합니다.
+        self.algorithm_time = 0.0
+        self.algorithm_count = 0
 
+        self.work_time = 0
         if self.sub_process != None:
             if self.sub_process.is_alive():
                 self.sub_process.kill()
@@ -48,11 +51,14 @@ class procees_tsp_solver:
 
     def reset(self):
         #while 탈출 및 sub process를 죽입니다.
+        print("나냐")
         if self.sub_process ==None:
             return
         self.solver_data["reset"] = True
+        print("hello")
         if self.sub_process.is_alive():
             self.sub_process.kill()
+            print("i killed")
 
     def process(self,order_data, solver_data,robot_data):
         self.initalize(solver_data)#각 노드의 좌표를 변형합니다.
@@ -71,17 +77,24 @@ class procees_tsp_solver:
             self.delete_orders(order_data, solved_orders_index)
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
         #-------------------추가된 부분---------------------
-            time.sleep(0.1)
+            time.sleep(0.5)
         self.save_result(robot_data)
 
 
     def solve_batch(self, current_orders, readonly_robot_data, robot_data):
         readonly_orders = copy.deepcopy(current_orders["orders"])  # 읽을수만 있는 현재 최종 order를 가져옵니다.
+
         if self.using_order_batch == "FIFO":
             return online_order_batch_FIFO(readonly_orders,
                                            self.init_batch_size,
                                            self.max_batch_size,
-                                           robot_data)
+                                           robot_data,current_orders["end_flag"])
+        elif self.using_order_batch == "HCOB":
+            return online_order_batch_HCOB(readonly_orders,
+                                           self.init_batch_size,
+                                           self.max_batch_size,
+                                           robot_data,
+                                           self.node_point_y_x)
 
     def initalize(self, solver_data):
         ## dynamic order make
@@ -198,8 +211,8 @@ class procees_tsp_solver:
                 if flag_check:
                     self.all_mission_clear = True
     def save_result(self,robot_data):
-        robot_data["full_algorithm_time"] = self.algorithm_count
-        robot_data["full_algorithm_count"] = self.algorithm_time
+        robot_data["full_algorithm_time"] = self.algorithm_time
+        robot_data["full_algorithm_count"] = self.algorithm_count
         robot_data["completion_time"] = self.work_time
         temp_list = []
         for robot in robot_data["robot"]:

@@ -59,24 +59,18 @@ def solve_tsp_online(changed_robot_index,robot_data,node_point_y_x):
         # 로봇을 멈춥니다.
 
 
-        temp = copy.deepcopy(robot_data['stop'])
+        temp = copy.deepcopy(robot_data['stop'])#로봇이 멈추도록설정
         temp[changed_robot] = True
         robot_data['stop'] = temp
-        '''
-        robot_pos_x = math.floor((saved_pk_point[packing_ind][0] - init_map_x) / res_width)
-        robot_pos_y = math.floor((saved_pk_point[packing_ind][1] - init_map_y) / res_height)
-        '''
-
-
 
         # 로봇의 현재위치를 받습니다.
         current_coordinate =robot_data['robot'][changed_robot].current_point
         # 로봇의 패킹지점위치를 받습니다.
         packing_coordinate =robot_data['robot'][changed_robot].home_packing_station
 
-        current_coordinate = recovery(robot_data["packing_pose_recovery"], current_coordinate)
+        current_coordinate = recovery(robot_data["packing_pose_recovery"], current_coordinate)#괜찮아
 
-        packing_coordinate = recovery(robot_data["packing_pose_recovery"], packing_coordinate)
+        packing_coordinate = recovery(robot_data["packing_pose_recovery"], packing_coordinate)#괜찮아
 
         #tsp문제에 사용할 order node를 얻습니다.
         tsp_node = update_tsp_node(robot_data, changed_robot)

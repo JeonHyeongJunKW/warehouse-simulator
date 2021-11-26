@@ -85,7 +85,11 @@ def static_aco_tsp_solver(current_position,packing_position,tsp_node, node_point
                     if rand_pro < cum_pro:
                         cum_ind = is_not_go[k]
                         break
-                is_not_go.remove(cum_ind)  # 이 노드는 들렸기때문에 제외한다.
+                try:
+                    is_not_go.remove(cum_ind)  # 이 노드는 들렸기때문에 제외한다.
+                except ValueError:
+                    print(is_not_go)
+                    print(cum_ind)
                 current_city = cum_ind
                 city_path.append(cum_ind)  # 경로에 추가한다.
                 if len(is_not_go) == 0:

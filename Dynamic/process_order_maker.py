@@ -15,6 +15,7 @@ class procees_order_maker:
     def run(self, order_data):
 
         self.order_data = order_data
+        self.order_data["end_flag"] = False
         self.order_data["reset"] = False #리셋플레그를 false로합니다.
 
         #이전에 살려뒀던 프로세스를 죽입니다.
@@ -53,6 +54,7 @@ class procees_order_maker:
             if order_count <self.max_ordercall:
                 order_count += order_rate
             else:
+                order_data["end_flag"] = True
                 continue
             time.sleep(1)
             new_order = [list(set([random.choice(list(range(kind))) for _ in range(order_size)])) for __ in
