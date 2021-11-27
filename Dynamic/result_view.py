@@ -13,6 +13,8 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+import json
+
 class result_sim_view(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,14 +39,17 @@ class result_sim_view(QWidget):
         DEBUG_log("tsp solver 초기화가 끝났습니다.")
         self.process_robot_mover = procees_robot_mover()  # 로봇들에 대한 움직임을 처리하는 프로세스, 로봇 데이터에 대한 초기화가 이루어진다.
         DEBUG_log("robot 무브메이커 초기화가 끝났습니다.")
-        # self.result_sim_view = result_sim_view()
+        # self.result_sim_view = result_sim_view() ##----------------------------수정한 부분 11/27
         # 시각적으로 그려주는 GUI 위젯
         self.gui_simulation = None
         self.gui_data = Manager().dict()
         self.timer = QTimer(self)
+        self.timer2 = QTimer(self)##----------------------------수정한 부분 11/27
         self.timer.timeout.connect(self.redo_check)
+        self.timer2.timeout.connect(self.param_exp)##----------------------------수정한 부분 11/27
         self.sim_count =0
         self.saved_result = []
+        self.tested_param = []
 
     def start(self):
 
@@ -60,6 +65,65 @@ class result_sim_view(QWidget):
         self.timer.start(100)
         self.robot_mover_data["the_end"] = True
 
+    def param_start(self):##----------------------------수정한 부분 11/27
+
+        self.draw_map()##----------------------------수정한 부분 11/27
+        self.saved_result = []##----------------------------수정한 부분 11/27
+        self.sim_count = 0##----------------------------수정한 부분 11/27
+        self.timer2.stop()##----------------------------수정한 부분 11/27
+        self.pb_getResult.setValue(0)##----------------------------수정한 부분 11/27
+        self.process_order_maker.reset()##----------------------------수정한 부분 11/27
+        self.process_tsp_solver.reset()##----------------------------수정한 부분 11/27
+        self.process_robot_mover.reset()##----------------------------수정한 부분 11/27
+        #저장할 파라미터들을 미리 리스트의 형태로 저장해둡니다.
+        self.tested_param = []##----------------------------수정한 부분 11/27
+        for bound_size in range(100,2000,100):##----------------------------수정한 부분 11/27
+            for expire_time in range(10,210,20):##----------------------------수정한 부분 11/27
+                self.tested_param.append([bound_size,expire_time])##----------------------------수정한 부분 11/27
+        self.timer2.start(100)##----------------------------수정한 부분 11/27
+        self.robot_mover_data["the_end"] = True##----------------------------수정한 부분 11/27
+    def param_exp(self):##----------------------------수정한 부분 11/27
+        if self.robot_mover_data["the_end"]:##----------------------------수정한 부분 11/27
+            ##----------------------------이 아래 전부...
+
+            if self.sim_count >0:##----------------------------수정한 부분 11/27
+                result_set = {}##----------------------------수정한 부분 11/27
+                result_set['bound_size'] = self.process_tsp_solver.bound_size##---수정할 파라미터들 미리 선언해두세요.
+                result_set['expired_time'] = self.process_tsp_solver.expire_time##---수정할 파라미터들 미리 선언해두세요.
+                result_set['full_algorithm_time'] = self.robot_mover_data["full_algorithm_time"]
+                result_set['count'] = self.robot_mover_data["full_algorithm_count"]
+                result_set['robot_step'] =self.robot_mover_data["robot_step"]
+                result_set['completion_time'] = self.robot_mover_data["completion_time"]
+
+
+                filepath = "./param_setting/"##---결과 저장할 위치는 폴더를 다르게 해주세요.
+                if self.sim_count == 1:
+                    filepath += "FIFO.json"
+                else:
+                    filepath += "HCOB_" + str(self.process_tsp_solver.bound_size) + "_" + str(
+                        self.process_tsp_solver.expire_time) + ".json"
+                with open(filepath, 'w') as outfile:
+                    json.dump(result_set, outfile)
+                self.process_tsp_solver.using_order_batch = "HCOB"
+                self.process_tsp_solver.using_order_sequence = "OPT"
+                if self.sim_count <= len(self.tested_param):
+                    self.process_tsp_solver.bound_size = self.tested_param[self.sim_count-1][0]
+                    self.process_tsp_solver.expire_time = self.tested_param[self.sim_count-1][1]
+                    self.robot_mover_data["the_end"] = True
+                    self.run()
+                    self.sim_count += 1
+                    if self.sim_count == int(len(self.tested_param)/3):
+                        print("3분의 1이 끝났습니다.")
+                    elif self.sim_count == int(2*len(self.tested_param)/3):
+                        print("3분의 2가 끝났습니다.")
+                else :
+                    self.timer.stop()
+                    print("3분의 3이 끝났습니다. 다 끝났습니다.")
+
+            else:
+                self.robot_mover_data["the_end"] = True
+                self.run()
+                self.sim_count+=1
 
 
     def redo_check(self):
@@ -70,13 +134,16 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
-                self.process_tsp_solver.using_order_batch ="HCOB"
+                self.process_tsp_solver.using_order_batch ="FIFO"
+
             elif self.sim_count==2:
                 self.pb_getResult.setValue(66)
                 self.saved_result.append([self.robot_mover_data["full_algorithm_time"],
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
+                self.process_tsp_solver.using_order_sequence = "TSP_ONLINE"
+                self.process_tsp_solver.using_order_batch = "FIFO"
             self.robot_mover_data["the_end"] = True
             self.run()
 
@@ -94,8 +161,6 @@ class result_sim_view(QWidget):
             self.draw_result()
             self.timer.stop()
 
-
-
     def run(self):
 
         self.process_order_maker.reset()
@@ -109,10 +174,11 @@ class result_sim_view(QWidget):
                                     self.robot_mover_data)
         self.process_robot_mover.run(self.gui_data)
 
-        self.gui_simulation = online_simulator()
+        # self.gui_simulation = online_simulator()
 
-        self.gui_simulation.run(self.gui_data)
-    def initialize(self,map_data,ui_data,sim_data):
+        # self.gui_simulation.run(self.gui_data)
+
+    def initialize(self, map_data, ui_data, sim_data):
         self.show()
 
         self.map_data = map_data
@@ -137,9 +203,6 @@ class result_sim_view(QWidget):
         self.gui_data["map_data"] = self.map_data
         self.gui_data["ui_data"] = self.ui_data
 
-
-
-
     def set_param(self,init_ordernum,update_ordernum,max_itemnum,max_ordercall,robotnum,init_batch_size,max_batch_size,max_order):
         self.process_order_maker.init_ordernum = init_ordernum
         self.process_order_maker.update_ordernum = update_ordernum
@@ -149,7 +212,6 @@ class result_sim_view(QWidget):
         self.process_tsp_solver.init_batch_size = init_batch_size
         self.process_tsp_solver.max_batch_size = max_batch_size
         self.process_tsp_solver.max_order = max_order
-
 
     def closeEvent(self, QCloseEvent):
         self.process_order_maker.reset()

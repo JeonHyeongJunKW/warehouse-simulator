@@ -127,6 +127,10 @@ def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
                 temp = robot_data['already_gone_node']
                 temp[robot_ind]= copy.copy(robot.already_gone_node)
                 robot_data['already_gone_node'] =temp
+
+                temp = robot_data['not_go']
+                temp[robot_ind] = copy.copy(robot.not_go)
+                robot_data['not_go'] = temp
                 if robot.packing_point_arrive:
                     robot.packing_point_arrive = False
                     restart_robot(robot_data, robot, robot_ind)

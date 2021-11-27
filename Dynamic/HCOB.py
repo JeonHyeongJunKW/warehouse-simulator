@@ -1,8 +1,9 @@
 import time
+import datetime
 import copy
 import numpy as np
-
-distance_bound = 500
+from Dynamic.DEBUG_tool import DEBUG_log,DEBUG_log_tag
+# distance_bound = 500
 def Is_Expiration(buffer_time,expired_list,buffer_order_ind):
     return_flag = False
     for i, exp_time in enumerate(buffer_time):
@@ -58,21 +59,26 @@ def Do_make_Q_robot(robot_data,buffer_orders,expired_list,init_batch_size,buffer
     solved_batches = readonly_current_robot_batch  # 현재의 로봇배치
     changed_robot_index = []  # 배치가 바뀐 로봇의 인덱스
     solved_orders_index = []
-
+    readonly_current_robot = copy.deepcopy(robot_data["robot"])
+    robot_index = []
+    robot_steps = []
     for robot_ind, batch in enumerate(readonly_current_robot_batch):
-        if len(batch) ==0:
-            solved_batches[robot_ind] = current_batch#비어있는 로봇에게 추가합니다.
-            changed_robot_index.append(robot_ind)
-            # solved_orders_index += expired_list#실제 만료되는 인덱스
-            solved_orders_index +=current_batch_ind_in_buffer
-            break
-
+        if len(batch) ==0: #===> step 사이즈가 적은 수의 로봇에게 할당한다.
+            robot_index.append(robot_ind)
+            robot_steps.append(readonly_current_robot[robot_ind].step)
+            # break
+    min_step = min(robot_steps)
+    target_ind = robot_index[robot_steps.index(min_step)]
+    solved_batches[target_ind] = current_batch  # 비어있는 로봇에게 추가합니다.
+    changed_robot_index.append(target_ind)
+    # solved_orders_index += expired_list#실제 만료되는 인덱스
+    solved_orders_index += current_batch_ind_in_buffer
 
     #후처리, 풀린 order에 대한 기록을 지워야합니다. 현재 버퍼에서의 인덱스를 넣습니다.
     deleted_order = current_batch_ind_in_buffer#버퍼내에서의 인덱스면... 실제 order로써의 인덱스가 같을까?
     return solved_orders_index,solved_batches,changed_robot_index, deleted_order
 
-def Is_good_to_picking_robot_apply(robot_data,buffer_orders,buffer_order_ind, expired_list,max_batch_size,node_point_y_x,no_bound = False):
+def Is_good_to_picking_robot_apply(robot_data,buffer_orders,buffer_order_ind, expired_list,max_batch_size,node_point_y_x,bound_size,no_bound = False):
     good_match = []
     readonly_current_robot_batch = copy.deepcopy(robot_data["current_robot_batch"])  # 현재의 로봇배치를 넣는다.
 
@@ -90,7 +96,7 @@ def Is_good_to_picking_robot_apply(robot_data,buffer_orders,buffer_order_ind, ex
                 current_coordinate = recovery(robot_data["packing_pose_recovery"], robot_data["robot"][robot_ind].current_point)#현재 로봇의 좌표
                 normalize_dis = Similarity_btw_robot_order(union_batch_notgo,current_coordinate,compare_order,node_point_y_x)
                 # print("작은 거리들", normalize_dis)
-                if normalize_dis< distance_bound or no_bound: #일정한 거리를 넘어가면 배치하지않는다.
+                if normalize_dis< bound_size or no_bound: #일정한 거리를 넘어가면 배치하지않는다.
                     if normalize_dis < small_robot_dis:  # 가장 거리가 작은 로봇을 찾는다.
                         small_robot_dis = normalize_dis
                         small_robot_ind = robot_ind
@@ -107,11 +113,12 @@ def Similarity_btw_robot_order(union_batch_notgo,current_coordinate,compare_orde
     #비교대상으로 쓰일 order들에 대해서 각각의 가장 작은 거리를 numpy연산을 통해서 찾는다.
     #전체 거리에 대해서 평균을 내어서 가장가까운 노드를 찾는다.
 
-
+    sim_time = time.time()
     orders = [node_point_y_x[order] for order in union_batch_notgo]
     orders.append(current_coordinate)
     seed_orders = [node_point_y_x[order] for order in compare_order]
     small_seed_dis = find_small_dis(seed_orders,orders)
+    DEBUG_log_tag("작은 거리 찾는데 걸리는 시간", time.time()-sim_time)
     return small_seed_dis/len(seed_orders)#노멀라이즈된 거리
 
 
@@ -145,7 +152,7 @@ def Do_apply_order(good_match,robot_data,buffer_order_ind,buffer_orders,buffer_t
         del buffer_time[order_ind]#버퍼내의 주문의 만료시간을 삭제
     return solved_orders_index,solved_batches,changed_robot_index
 
-def Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size):
+def Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size,bound_size):
     #좋은 집합이 만들어지는가?
     for i, seed_order_ind in enumerate(buffer_orders):
         seed_order = [node_point_y_x[j] for j in seed_order_ind]
@@ -161,12 +168,8 @@ def Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size):
         if len(same_batch_ind) ==0:
             continue
         # print("마지막 거리", item_dis[same_batch_ind[-1]]/len(seed_order_ind))
-        try:
-            if item_dis[same_batch_ind[-1]]/len(seed_order_ind) >distance_bound:
-                continue
-        except IndexError:
-            print(same_batch_ind,"문제")
-            print(item_dis,"문제")
+        if item_dis[same_batch_ind[-1]]/len(seed_order_ind) >bound_size:
+            continue
         else :
             #현재 seed order(i)에 대해서, same_batch_ind에 속하는 order를 찾아서 하나로 묶는다.
             seed_order_last = i
@@ -207,13 +210,15 @@ def Delete_orders_in_Buffer(buffer_order_ind,buffer_orders,buffer_time,deleted_o
         del buffer_orders[order_ind]#버퍼내의 주문 자체를 삭제
         del buffer_time[order_ind]#버퍼내의 주문의 만료시간을 삭제
 
-def Is_good_to_picking_robot_apply_new_order(robot_data,buffer_orders,buffer_order_ind, new_orders,max_batch_size,node_point_y_x):
+def Is_good_to_picking_robot_apply_new_order(robot_data,buffer_orders,buffer_order_ind, new_orders,max_batch_size,node_point_y_x,bound_size):
     good_match = []
     readonly_current_robot_batch = copy.deepcopy(robot_data["current_robot_batch"])  # 현재의 로봇배치를 넣는다.
     no_insert = True
+    robot_info_data = copy.deepcopy(robot_data)
     # 현재 0개이상의 solved_bathch에 대해서 유사도 검사
     # print("새로운 주문들이야 : ", new_orders)
     for new_ind in new_orders:
+        check_time_2 = time.time()
         index_in_buffer = buffer_order_ind.index(new_ind)  # 주문의 고유번호로 버퍼에서의 위치를 찾는다.
         # print("실제 번호 : ", new_ind)
         # print("버퍼내에서 번호 : ",index_in_buffer)
@@ -224,16 +229,30 @@ def Is_good_to_picking_robot_apply_new_order(robot_data,buffer_orders,buffer_ord
         for robot_ind, batch in enumerate(readonly_current_robot_batch):
             union_batch = list(set(sum(batch, [])))
             # print("넣으려고 하는 로봇의 배치사이즈야 : ", len(batch))
-            if len(batch) >= 0 and len(batch) < max_batch_size:  # 적절한 배치사이즈 범위 안이라면
+            if len(batch) > 0 and len(batch) < max_batch_size:  # 적절한 배치사이즈 범위 안이라면
                 no_insert = False
-                already_gone_node = robot_data['already_gone_node'][robot_ind]
-                union_batch_notgo = [node for node in union_batch if node not in already_gone_node]  # 앞으로 로봇이 가야하는 노드 수
-                current_coordinate = recovery(robot_data["packing_pose_recovery"],
-                                              robot_data["robot"][robot_ind].current_point)  # 현재 로봇의 좌표
+                check_time = datetime.datetime.now()
+                already_gone_node = robot_info_data['already_gone_node'][robot_ind]
+                DEBUG_log_tag("그냥 이미 간 노드 가져오는데 걸리는 시간 us", (datetime.datetime.now() - check_time).microseconds)
+                DEBUG_log_tag("union batch 갯수", len(union_batch))
+                DEBUG_log_tag("이미 간 노드 갯수", len(already_gone_node))
+                # union_batch = np.array(union_batch)
+                # already_gone_node =np.array(already_gone_node)
+                # union_batch_notgo = [node for node in union_batch if node not in already_gone_node]  # 앞으로 로봇이 가야하는 노드 수
+                # union_batch_notgo = np.intersect1d(union_batch,already_gone_node).tolist()
+                check_time_3 =datetime.datetime.now()
+                union_batch_notgo = robot_info_data['not_go'][robot_ind]
+                DEBUG_log_tag("아직 가지않는 노드만 발라 내는 데 걸리는 시간 us", (datetime.datetime.now() - check_time_3).microseconds)
+                check_time_4 = datetime.datetime.now()
+                current_coordinate = recovery(robot_info_data["packing_pose_recovery"],
+                                              robot_info_data["robot"][robot_ind].current_point)  # 현재 로봇의 좌표
+                DEBUG_log_tag("리커버리에 걸리는 시간", (datetime.datetime.now() - check_time_4).microseconds)
+                DEBUG_log_tag("로봇과의 유사도 비교전에 걸리는 시간 us", (datetime.datetime.now() - check_time).microseconds)
                 normalize_dis = Similarity_btw_robot_order(union_batch_notgo, current_coordinate, compare_order,
                                                            node_point_y_x)
+                DEBUG_log_tag("로봇과의 유사도 비교에 걸리는 시간 us",(datetime.datetime.now() - check_time).microseconds)
                 # print("유통기한 안지난 애들의 거리 ", normalize_dis)
-                if normalize_dis < distance_bound:  # 일정한 거리를 넘어가면 배치하지않는다.
+                if normalize_dis < bound_size:  # 일정한 거리를 넘어가면 배치하지않는다.
                     if normalize_dis < small_robot_dis:  # 가장 거리가 작은 로봇을 찾는다.
                         small_robot_dis = normalize_dis
                         small_robot_ind = robot_ind
@@ -241,7 +260,7 @@ def Is_good_to_picking_robot_apply_new_order(robot_data,buffer_orders,buffer_ord
         if small_robot_ind != -1:
             readonly_current_robot_batch[small_robot_ind].append(compare_order)
             good_match.append([index_in_buffer, small_robot_ind])
-
+        DEBUG_log_tag("새 주문별로 로봇과의 유사도 비교에 걸리는 시간", time.time() - check_time_2)
     # print("매칭결과야 ", good_match)
     # print("---------")
     return good_match, no_insert

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>597</width>
-    <height>233</height>
+    <height>276</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -161,7 +161,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>3</string>
+    <string>10</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -177,7 +177,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>2</string>
+    <string>4</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -193,7 +193,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>4</string>
+    <string>6</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -365,6 +365,42 @@
    </property>
    <property name="text">
     <string>대</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="buttonGoodParam">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>210</y>
+     <width>201</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <pointsize>14</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>좋은 파라미터 얻기</string>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
+   </property>
+   <property name="default">
+    <bool>false</bool>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>

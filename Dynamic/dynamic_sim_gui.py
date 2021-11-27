@@ -43,8 +43,9 @@ class Dynamic_Sim(QWidget):
 
         self.buttonRealView.clicked.connect(self.Real_Simulation_Start)
         self.buttonResultView.clicked.connect(self.Result_Simulation_Start)
-
+        self.buttonGoodParam.clicked.connect(self.start_param_get)
         self.result_sim_view = result_sim_view()
+
 
     def start(self,map_data,sim_data,ui_data):
 
@@ -114,6 +115,12 @@ class Dynamic_Sim(QWidget):
         self.initialize_viewer()#기본적인 시뮬레이션 파라미터 초기화
         self.result_sim_view.start()#실질적인 구동
 
+    def start_param_get(self):
+        self.result_sim_view.initialize(self.map_data,  # 기본데이터셋 초기화
+                                        self.ui_data,
+                                        self.sim_data)
+        self.initialize_viewer()  # 기본적인 시뮬레이션 파라미터 초기화
+        self.result_sim_view.param_start()  # 실질적인 구동
 
     def closeEvent(self, QCloseEvent):
         self.process_order_maker.reset()

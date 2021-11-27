@@ -4,8 +4,8 @@ from multiprocessing import Process
 import copy
 import numpy as np
 from Dynamic.Online_orderbatch import *
-from Dynamic.Online_ordersequence import solve_tsp_online
-from Dynamic.DEBUG_tool import DEBUG_log,DEBUG_log_tag
+from Dynamic.Online_ordersequence import *
+from Dynamic.DEBUG_tool import DEBUG_log, DEBUG_log_tag
 
 
 class procees_tsp_solver:
@@ -20,6 +20,7 @@ class procees_tsp_solver:
         self.init_batch_size = 3  # 초기에 로봇에게 할당할 배치사이즈
         self.max_batch_size = 6  # interventionist방식에서 로봇에 대한 최대 배치사이즈(CAPACITY)
         self.all_mission_clear = False
+
         self.max_order =1000
         self.order_counter =0
         self.start_time =0
@@ -30,6 +31,10 @@ class procees_tsp_solver:
         self.algorithm_count = 0
 
         self.work_time = 0
+
+        self.bound_size = 100
+        self.expire_time = 10
+
     def run(self, order_data,solver_data,robot_data):
         self.order_data = order_data
         self.solver_data = solver_data
@@ -65,6 +70,7 @@ class procees_tsp_solver:
             if self.solver_data["reset"]:
                 break
             #로봇정보와 로봇의 대수를 가져옵니다.
+            real_time = time.time()
             robots, robot_number = self.get_robot_number_batches(robot_data)
             solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
             #다끝났는지 확인하는 법.. 일단. 더이상 order를 생성 못해야함. orders도 확인해야함. 모든 로봇들이 새로운 배치를 기다리는지도 확인해야함.
@@ -72,10 +78,12 @@ class procees_tsp_solver:
             if self.all_mission_clear:
                 self.work_time = time.time()-self.start_time
                 break
+
+            real_time_2 = time.time()
             self.delete_orders(order_data, solved_orders_index)
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
         #-------------------추가된 부분---------------------
-            time.sleep(0.1)
+            time.sleep(1)
         self.save_result(robot_data)
 
 
@@ -92,7 +100,7 @@ class procees_tsp_solver:
                                            self.init_batch_size,
                                            self.max_batch_size,
                                            robot_data,
-                                           self.node_point_y_x)
+                                           self.node_point_y_x,self.bound_size,self.expire_time)
 
     def initalize(self, solver_data):
         ## dynamic order make
@@ -196,10 +204,15 @@ class procees_tsp_solver:
             self.algorithm_time += additional_time
             self.algorithm_count += additional_count
 
-    def is_simulation_end(self,solved_orders_index, changed_robot_index,robot_data):
+        elif self.using_order_sequence == "OPT":
+            additional_time, additional_count = solve_tsp_opt_online(changed_robot_index, robot_data, self.node_point_y_x)
+            self.algorithm_time += additional_time
+            self.algorithm_count += additional_count
+
+    def is_simulation_end(self, solved_orders_index, changed_robot_index,robot_data):
         self.order_counter += len(solved_orders_index)
         if self.max_order == self.order_counter:
-            if len(changed_robot_index) ==0:
+            if len(changed_robot_index) == 0:
                 flag_check = True
                 for move in robot_data['stop']:
                     if not move:
@@ -208,7 +221,8 @@ class procees_tsp_solver:
 
                 if flag_check:
                     self.all_mission_clear = True
-    def save_result(self,robot_data):
+
+    def save_result(self, robot_data):
         robot_data["full_algorithm_time"] = self.algorithm_time
         robot_data["full_algorithm_count"] = self.algorithm_count
         robot_data["completion_time"] = self.work_time

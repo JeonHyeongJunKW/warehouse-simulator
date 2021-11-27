@@ -14,6 +14,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     #1. init_batch이하인 로봇들의 배치를 가져온다. 더이상 남은 order가 없다면 리턴, 있다면 FIFO방식으로 할당
 
     start_order = 0
+
     for robot_index, robot_batch in enumerate(readonly_current_robot_batch):
         if end_flag:
             if len(robot_batch) == 0 and len(readonly_orders)-start_order < init_batch_size:#로봇의 배치사이즈가 0이고, 남은 주문의 사이즈가 초기 배치사이즈보다 작다면
@@ -97,22 +98,22 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     # print("배치가 수정된 로봇들 : ", changed_robot_index)
     return solved_orders_index,solved_batches,changed_robot_index
 
-def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, robot_data, node_point_y_x):
+def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, robot_data, node_point_y_x,bound_size,expire_time):
     '''
     이미 버퍼링되던 시간
     online_order_batch_HCOB.buffered_order = []
     online_order_batch_HCOB.buffered_order_time = []
     '''
+
+    DEBUG_log("---------------HCOB---------------------")
     start_time = time.time()
-    # print("HCOB")
     buffer_order_ind = online_order_batch_HCOB.buffered_order_ind  #현재 order 큐에서해당하는 주문의 인덱스
     buffer_orders = online_order_batch_HCOB.buffered_order #현재 큐에있는 주문들
     buffer_time = online_order_batch_HCOB.buffered_order_time#각 주문들이 만료되는 시간
 
     # print(buffer_orders)
-    expired_list = []#현재 step에서 만료된 주문의 큐 내에서 인덱스, 매번갱신된다.
-    #readonly_orders를 확인하고 추가되었으면 버퍼에 넣고, 시간을 기록한다.
-    expired_time =60#주문이 들어와서, 만료되는 시간 / 10초 뒤에 만료됩니다.
+    expired_list = []
+    expired_time =expire_time
 
     solved_orders_index = []
     readonly_current_robot_batch = copy.deepcopy(robot_data["current_robot_batch"])  # 현재의 로봇배치를 넣는다.
@@ -127,36 +128,37 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
 
             online_order_batch_HCOB.order_num +=1 # 인덱스 번호를 올립니다.
             new_order = True
-
-
+    add_time = time.time()
+    DEBUG_log_tag("add time",add_time-start_time)
     if Is_Expiration(buffer_time,expired_list,buffer_order_ind):# 유통기한을 검사한다. 만약에 넘는게 있는가?
-        # print("1. 유통기한이 지났어...")
+        DEBUG_log_tag("1. 유통기한이 지났음",time.time() - add_time)
         if Is_picking_robot_cap_max(robot_data,max_batch_size):#이동중인 로봇의 용량이 꽉찾는가?
-            # print("2. 이동중인 로봇이 다 꽉찼어")
+            DEBUG_log_tag("2. 이동중인 로봇의 용량이 꽉참",time.time() - add_time)
             if Is_remaining_robot(robot_data):# 네, 그럼 아직 이동하지않은 로봇이 있는가?
-                #유사도를 따지지 않고 보냅니다.
-                # print("3. 남은 로봇이 있어")
+
                 solved_orders_index,solved_batches,changed_robot_index, deleted_order =\
                     Do_make_Q_robot(robot_data,
                                 buffer_orders,
                                 expired_list,
                                 init_batch_size,
                                 buffer_order_ind)# 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
-
+                DEBUG_log_tag("4. 이동중이지 않은 로봇에게 유통기한이 지난 order를 할당하는데 걸리는 시간 ", time.time() - add_time)
                 Delete_orders_in_Buffer(buffer_order_ind,buffer_orders,buffer_time,deleted_order)
             else:# 모든 로봇이 바쁘다면?
-                # print("4. 남은 로봇도 없어")
+                DEBUG_log_tag("5. 넣을 수가 없음 ", time.time() - add_time)
                 Do_Idle()#그냥 큐안에 둔다.
         else:
             # print("5. 이동중인 로봇한테 더넣을 수 있어!")
+            check_time = time.time()
             good_match = Is_good_to_picking_robot_apply(robot_data,
                                                         buffer_orders,
                                                         buffer_order_ind,
                                                         expired_list,
                                                         max_batch_size,
-                                                        node_point_y_x)
+                                                        node_point_y_x,bound_size)
+            DEBUG_log_tag("6. 이동중인 로봇에게 할당하기에 적절한지 판단 ", time.time() - check_time)
             if [] != good_match:#꽉차지않았다면 수행하기에 적절한가?
-                # print("6. 이동중인 로봇한테 더넣으면 좋을거같아!")
+
                 solved_orders_index,solved_batches,changed_robot_index = Do_apply_order(good_match,
                                robot_data,
                                buffer_order_ind,
@@ -165,24 +167,26 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
             else:
                 # print("7. 너무 안어울려서 이동중인 로봇한테 넣으면 안된데!")
                 if Is_remaining_robot(robot_data):  # 아직 이동하지않은 로봇이 있는가?
-                    # print("8. 남은 로봇이 있어서 억지로 출발시켰어")
+                    check_time = time.time()
                     solved_orders_index, solved_batches, changed_robot_index, deleted_order = \
                         Do_make_Q_robot(robot_data,
                                         buffer_orders,
                                         expired_list,
                                         init_batch_size,
                                         buffer_order_ind)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
-
+                    DEBUG_log_tag("7. 남은 로봇에게 유연하게 할당하는 데 걸리는 시간", time.time() - check_time)
                     Delete_orders_in_Buffer(buffer_order_ind, buffer_orders, buffer_time, deleted_order)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
                 else:
-                    # print("9. 남는 로봇에 제약없이 넣어버리자.")
+                    check_time = time.time()
                     good_match = Is_good_to_picking_robot_apply(robot_data,
                                                                 buffer_orders,
                                                                 buffer_order_ind,
                                                                 expired_list,
                                                                 max_batch_size,
                                                                 node_point_y_x,
+                                                                bound_size,
                                                                 True) ## 임계값 제약을 없애고 추가해준다.
+                    DEBUG_log_tag("8. 제약없이 이동중인 로봇에게 할당하는 데 걸리는 시간", time.time() - check_time)
                     solved_orders_index, solved_batches, changed_robot_index = Do_apply_order(good_match,
                                                                                               robot_data,
                                                                                               buffer_order_ind,
@@ -194,30 +198,27 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
             # print("11. 새로운 주문이 들어왔데!")
             new_orders = buffer_order_ind[len(online_order_batch_HCOB.past_order):]  # 새로 추가된 order에 대해서
             if Is_picking_robot_cap_max(robot_data,max_batch_size):#이동중인 로봇의 용량이 꽉차지 않았는가?
-
+                check_time = time.time()
                 good_match,no_insert = Is_good_to_picking_robot_apply_new_order(robot_data,
                                                                       buffer_orders,
                                                                       buffer_order_ind,
                                                                       new_orders,
                                                                       max_batch_size,
-                                                                      node_point_y_x)  # 꽉차지않았다면 수행하기에 적절한가?
+                                                                      node_point_y_x,bound_size)  # 꽉차지않았다면 수행하기에 적절한가?
+
+                DEBUG_log_tag("9. 이동중인 로봇에게 할당할지 고르는 데 걸리는 시간", time.time() - check_time)
                 if [] != good_match:
                     solved_orders_index, solved_batches, changed_robot_index = Do_apply_order(good_match,
                                                                                               robot_data,
                                                                                               buffer_order_ind,
                                                                                               buffer_orders,
                                                                                               buffer_time)  # 배치를 수정해버린다.
-                #     print("12. 이동중인 로봇중에 더 넣을 게")
-                # else:
-                #     if no_insert:
-                #         print("13-1. 피킹로봇에 자리가 없어")
-                #     else :
-                #         print("13-2. 이동로봇에 넣으려고 했는데, 너무 안어울려")
             else:
                 # print("14. 이동로봇의 용량이 꽉찼거나 이동로봇이 아직 없어")
                 if Is_remaining_robot(robot_data):  # 아직 이동하지않은 로봇이 있는가?
-
-                    good_match = Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size)
+                    check_time = time.time()
+                    good_match = Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size,bound_size)
+                    DEBUG_log_tag("10. 큐에서 좋은 배치가 만들어지는지 확인하는 데 걸리는 시간", time.time() - check_time)
                     if [] != good_match :
                         solved_orders_index, solved_batches, changed_robot_index = Do_make_Q_robot_new_order(good_match,
                                                   robot_data,
@@ -235,9 +236,9 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
             # print("18. 새로운 주문이 없어")
             # Do_Idle()#그냥 큐안에 둔다.
             if Is_remaining_robot(robot_data):  # 아직 이동하지않은 로봇이 있는가?
-
-                good_match = Is_maded_good_batch_in_Queue(buffer_orders, node_point_y_x, init_batch_size)
-                # print("19. 혹시 대기중인 괜찮은 주문이 있는가?")
+                check_time = time.time()
+                good_match = Is_maded_good_batch_in_Queue(buffer_orders, node_point_y_x, init_batch_size,bound_size)
+                DEBUG_log_tag("11. 로봇이 대기중인데, 추가할 수 있는지 고르는 시간 ", time.time() - check_time)
                 if [] != good_match:
                     solved_orders_index, solved_batches, changed_robot_index = Do_make_Q_robot_new_order(good_match,
                                                                                                          robot_data,

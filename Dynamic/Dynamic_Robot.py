@@ -23,6 +23,9 @@ class W_Robot:
         #online이라서 이미 간노드르 초기화합니다.
         self.already_gone_node = []
 
+        #앞으로 가야하는 노드
+        self.not_go = []
+
         #패킹지점에 도달하면 flag가 True가 됩니다.
         self.packing_point_arrive = False
 
@@ -35,13 +38,13 @@ class W_Robot:
     def astar_move(self, pre_another, another, control_check, robot_ind):
         find_goal = False
         pos = [0, 0]
-        move_control = [[0, 0], [1, 0], [0, 1], [0, -1], [-1, 0]]
+        move_control = [[1, 0], [0, 1], [0, -1], [-1, 0]]
         random.shuffle(move_control)
 
         # 로봇이 앞으로 갈 지점을 얻습니다.
         next_pos = self.get_next_robot_pos()
 
-        # 이전 위치의 index를 획득
+        # 이전 위치의 index 를 획득
         if self.astar_ind - 1 < 0:
             pre_ind = 0
         else:
@@ -54,7 +57,7 @@ class W_Robot:
             prior_ind = pre_another.index(next_pos)
             exc_control = [control_check[prior_ind][i] - pre_pos[i] for i in range(len(pre_pos))]
 
-            if robot_ind != prior_ind:
+            if robot_ind > prior_ind:
                 # print("robot_ind, prior_ind = ", robot_ind, prior_ind)
                 # print("exc_control = ", exc_control)
                 for control in move_control:
@@ -69,10 +72,16 @@ class W_Robot:
                         next_pos[1] = pos[1]
                         self.astar_route.insert(self.astar_ind, pre_pos)
                         self.astar_route.insert(self.astar_ind, next_pos)
-
+                        self.astar_ind += 1
                         break
 
+            elif robot_ind == prior_ind:
+                self.astar_ind += 1
+
             else:
+                next_pos[0] = pre_pos[0]
+                next_pos[1] = pre_pos[1]
+                self.astar_route.insert(self.astar_ind, pre_pos)
                 self.astar_ind += 1
 
         elif next_pos in another:
@@ -106,6 +115,7 @@ class W_Robot:
 
         if self.goal_point != self.home_packing_station:#last_ind가 피킹 선반들을 다돌고, 마지막 패킹지점으로 오지 않았다면(last_ind가 마지막에서 한 개 전이어야함.)
             self.set_goal_point(last_packing_index)# 패킹 지점을 목적지로 정할지, 피킹 지점을 목적지로 정할지 고릅니다.
+            del self.not_go[0]
             self.robot_goal_point_reset()#로봇의 골지점을 리셋하고, astar경로를 다시구합니다.
             return False
 
@@ -119,6 +129,7 @@ class W_Robot:
     def assign_work_astar(self, picking_point, shelf_grid_list,occupy_map):
         self.last_picking_shelf_index = 0
         self.picking_point = [-1] + picking_point + [self.packing_station_ind]
+        self.not_go = picking_point
         self.shelf_grid_list = shelf_grid_list#노드로 여겨지는 선반들에 대한 임시 목표지점들을 선택한다.(현재 위치는 포함 x)
         goal_candidate = self.shelf_grid_list[self.last_picking_shelf_index]  # 해당 선반이 포함하고 있는 모든 점을 찾는다.
 
@@ -157,6 +168,7 @@ class W_Robot:
         self.astar_ind = 0  # 이동지점 초기화
         self.astar_route = astar_path(self.occupy_map, self.current_point, self.goal_point)
         self.already_gone_node.append(self.picking_point[self.last_picking_shelf_index + 1])#이미 간 노드를 추가합니다.
+
         self.last_picking_shelf_index += 1  # 초기에 0에서 시작함.
 
     def get_next_robot_pos(self):

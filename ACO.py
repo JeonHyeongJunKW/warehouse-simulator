@@ -14,9 +14,9 @@ def get_path(refined_orders,distance_cost):
     evap_step = 1  # 증발주기
     evap_count = 0
     w_elit = 0.2  # 엘리트 엔트 추가율
-    ant_size = 100  # 엔트 사이즈
+    ant_size = 70  # 엔트 사이즈
     cur_it = 0
-    max_it = 100
+    max_it = 30
     map_size = len(refined_orders)
     heuristic_map = np.zeros((map_size, map_size))
     for i in range(map_size):
