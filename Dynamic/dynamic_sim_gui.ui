@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>597</width>
-    <height>276</height>
+    <height>388</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -96,7 +96,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>초기 배치 제한량 :</string>
+    <string>기본 적재량:</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -109,7 +109,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>최대 배치 제한량 :</string>
+    <string>최대 적재량 :</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_4">
@@ -374,7 +374,7 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>210</y>
+     <y>280</y>
      <width>201</width>
      <height>51</height>
     </rect>

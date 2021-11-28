@@ -134,7 +134,12 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
-                self.process_tsp_solver.using_order_batch ="FIFO"
+                print([self.robot_mover_data["full_algorithm_time"],
+                                          self.robot_mover_data["full_algorithm_count"],
+                                          self.robot_mover_data["completion_time"],
+                                          self.robot_mover_data["robot_step"]],sum(self.robot_mover_data["robot_step"]))
+                self.process_tsp_solver.using_order_sequence = "OPT"
+                self.process_tsp_solver.using_order_batch = "FIFO"
 
             elif self.sim_count==2:
                 self.pb_getResult.setValue(66)
@@ -142,8 +147,12 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
-                self.process_tsp_solver.using_order_sequence = "TSP_ONLINE"
-                self.process_tsp_solver.using_order_batch = "FIFO"
+                print([self.robot_mover_data["full_algorithm_time"],
+                       self.robot_mover_data["full_algorithm_count"],
+                       self.robot_mover_data["completion_time"],
+                       self.robot_mover_data["robot_step"]], sum(self.robot_mover_data["robot_step"]))
+                self.process_tsp_solver.using_order_sequence = "OPT"
+                self.process_tsp_solver.using_order_batch = "HCOB"
             self.robot_mover_data["the_end"] = True
             self.run()
 
@@ -158,6 +167,10 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["full_algorithm_count"],
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
+                print([self.robot_mover_data["full_algorithm_time"],
+                       self.robot_mover_data["full_algorithm_count"],
+                       self.robot_mover_data["completion_time"],
+                       self.robot_mover_data["robot_step"]],sum(self.robot_mover_data["robot_step"]))
             self.draw_result()
             self.timer.stop()
 
@@ -237,7 +250,7 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
         '''
-        algorithm_name = ['FCFS & O-ACO', "HCOB & O-ACO", "HCOB & OD-ACO"]
+        algorithm_name = ['FCFS & ACO', "FCFS & OPT", "HCOB & OPT"]
         algorithm_color = ['black', 'red', 'gold']
         fig = plt.figure(figsize=(6, 5.5))
         plt.title("Average Algorithm time", fontsize=12)

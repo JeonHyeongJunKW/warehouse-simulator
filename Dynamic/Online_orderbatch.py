@@ -14,7 +14,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     #1. init_batch이하인 로봇들의 배치를 가져온다. 더이상 남은 order가 없다면 리턴, 있다면 FIFO방식으로 할당
 
     start_order = 0
-
+    # print("FIFO")
     for robot_index, robot_batch in enumerate(readonly_current_robot_batch):
         if end_flag:
             if len(robot_batch) == 0 and len(readonly_orders)-start_order < init_batch_size:#로봇의 배치사이즈가 0이고, 남은 주문의 사이즈가 초기 배치사이즈보다 작다면
@@ -96,6 +96,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     # print("이번 step에 풀린 index : ", solved_orders_index)
     # print("현재까지 풀린 배치들 : ", solved_batches)
     # print("배치가 수정된 로봇들 : ", changed_robot_index)
+    # print(solved_orders_index,solved_batches,changed_robot_index)
     return solved_orders_index,solved_batches,changed_robot_index
 
 def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, robot_data, node_point_y_x,bound_size,expire_time):

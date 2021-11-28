@@ -39,7 +39,7 @@ class W_Robot:
         find_goal = False
         pos = [0, 0]
         move_control = [[1, 0], [0, 1], [0, -1], [-1, 0]]
-        random.shuffle(move_control)
+        #random.shuffle(move_control)
 
         # 로봇이 앞으로 갈 지점을 얻습니다.
         next_pos = self.get_next_robot_pos()

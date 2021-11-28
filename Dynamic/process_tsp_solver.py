@@ -32,8 +32,8 @@ class procees_tsp_solver:
 
         self.work_time = 0
 
-        self.bound_size = 100
-        self.expire_time = 10
+        self.bound_size = 400
+        self.expire_time = 10 # 30 /60 ~ 낮을수록 좀더 좋은 결과에 가까운듯함
 
     def run(self, order_data,solver_data,robot_data):
         self.order_data = order_data
@@ -66,13 +66,18 @@ class procees_tsp_solver:
     def process(self,order_data, solver_data,robot_data):
         self.initalize(solver_data)#각 노드의 좌표를 변형합니다.
         self.start_time = time.time()
+        print("new start")
         while True:
             if self.solver_data["reset"]:
                 break
             #로봇정보와 로봇의 대수를 가져옵니다.
             real_time = time.time()
             robots, robot_number = self.get_robot_number_batches(robot_data)
-            solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
+            try :
+                solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
+            except TypeError:
+                print(self.solve_batch(order_data,robots, robot_data))
+                print(self.all_mission_clear)
             #다끝났는지 확인하는 법.. 일단. 더이상 order를 생성 못해야함. orders도 확인해야함. 모든 로봇들이 새로운 배치를 기다리는지도 확인해야함.
             self.is_simulation_end(solved_orders_index, changed_robot_index,robot_data)
             if self.all_mission_clear:
@@ -85,6 +90,7 @@ class procees_tsp_solver:
         #-------------------추가된 부분---------------------
             time.sleep(1)
         self.save_result(robot_data)
+        print("i save result")
 
 
     def solve_batch(self, current_orders, readonly_robot_data, robot_data):
@@ -221,6 +227,7 @@ class procees_tsp_solver:
 
                 if flag_check:
                     self.all_mission_clear = True
+                    print("all mission clear")
 
     def save_result(self, robot_data):
         robot_data["full_algorithm_time"] = self.algorithm_time
@@ -233,7 +240,6 @@ class procees_tsp_solver:
         self.algorithm_time =0
         self.algorithm_count =0
         self.work_time = 0
-        #이제 하나 끝났습니다.
         robot_data["the_end"] = True
 
                     
