@@ -131,8 +131,10 @@ class W_Robot:
         self.picking_point = [-1] + picking_point + [self.packing_station_ind]
         self.not_go = picking_point
         self.shelf_grid_list = shelf_grid_list#노드로 여겨지는 선반들에 대한 임시 목표지점들을 선택한다.(현재 위치는 포함 x)
-        goal_candidate = self.shelf_grid_list[self.last_picking_shelf_index]  # 해당 선반이 포함하고 있는 모든 점을 찾는다.
-
+        try:
+            goal_candidate = self.shelf_grid_list[self.last_picking_shelf_index]  # 해당 선반이 포함하고 있는 모든 점을 찾는다.
+        except IndexError:
+            print(self.robot)
         min_dis = 1000
         min_ind = -1
 

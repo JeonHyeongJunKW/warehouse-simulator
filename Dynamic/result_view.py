@@ -254,14 +254,18 @@ class result_sim_view(QWidget):
         algorithm_color = ['black', 'red', 'gold']
         fig = plt.figure(figsize=(6, 5.5))
         plt.title("Average Algorithm time", fontsize=12)
-        plt.bar(np.arange(3), np.array([self.saved_result[0][0]/self.saved_result[0][1],
-                                         self.saved_result[1][0]/self.saved_result[1][1],
-                                         self.saved_result[2][0]/self.saved_result[2][1]]),
+        # plt.bar(np.arange(3), np.array([self.saved_result[0][0]/self.saved_result[0][1],
+        #                                  self.saved_result[1][0]/self.saved_result[1][1],
+        #                                  self.saved_result[2][0]/self.saved_result[2][1]]),
+        #         width = 0.8, color = algorithm_color)
+        plt.bar(np.arange(3), np.array([self.saved_result[0][0],
+                                        self.saved_result[1][0],
+                                        self.saved_result[2][0]]),
                 width=0.8, color=algorithm_color)
         plt.xticks(np.arange(3), algorithm_name, fontsize=8)
         plt.xlabel("Algorithm", fontsize=10)
         plt.ylabel("Second", fontsize=10)
-        plt.savefig("result/평균 알고리즘 시간.png")
+        plt.savefig("result/전체 알고리즘 시간.png")
         plt.clf()
 
         fig = plt.figure(figsize=(6, 5.5))
@@ -294,7 +298,7 @@ class result_sim_view(QWidget):
         plt.clf()
 
         self.qPixmapVar = QPixmap()
-        self.qPixmapVar.load("result/평균 알고리즘 시간.png")
+        self.qPixmapVar.load("result/전체 알고리즘 시간.png")
         self.qPixmapVar = self.qPixmapVar.scaled(self.lb_mean_time.width(), self.lb_mean_time.height(), Qt.KeepAspectRatio)
         self.lb_mean_time.setPixmap(self.qPixmapVar)
 

@@ -96,12 +96,16 @@ class procees_robot_mover:
 
             robots.append(robot)
         self.robot_data['robot'] =robots# W_Robot객체를 저장합니다.
-        self.robot_data['current_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
+        # self.robot_data['current_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
+        for i in range(len(robot_data['robot'])):
+            self.robot_data['current_robot_batch_'+str(i)] = []
         self.robot_data['past_robot_batch'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇에게 할당된 배치입니다.
         self.robot_data['stop'] = [True for _ in range(len(robot_data['robot']))]#로봇에게 할당된 배치입니다.
         self.robot_data['already_gone_node'] = [[] for _ in range(len(robot_data['robot']))]#과거에 로봇이 이미 이동한 노드입니다.
         self.robot_data['not_go'] = [[] for _ in range(len(robot_data['robot']))]  # 과거에 로봇이 이미 이동한 노드입니다.
-        self.robot_data['optimal_path'] = [[] for _ in range(len(robot_data['robot']))]#현재 로봇에 대한 최적경로
+        # self.robot_data['optimal_path'] = [[] for _ in range(len(robot_data['robot']))]#현재 로봇에 대한 최적경로
+        for i in range(len(robot_data['robot'])):
+            self.robot_data['optimal_path_'+str(i)] = []
         self.robot_data['new_batch'] = [False for _ in range(len(robot_data['robot']))]  # 현재 로봇에 대한 최적경로
         self.robot_data["packing_pose_recovery"] = [init_map_y,init_map_x,res_width,res_height]
         self.robot_data["robot_coordinates"] = []  # 로봇의 위치

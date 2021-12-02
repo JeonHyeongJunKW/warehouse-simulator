@@ -12,17 +12,18 @@ def make_astar_path_robot(robot, shelf_grid_list, occupy_map, optimal_path):
 
 
 def restart_robot(robot_data,robot,robot_ind):
-    temp = copy.deepcopy(robot_data)
-    temp["optimal_path"][robot_ind] = []
-    robot_data["optimal_path"] = temp["optimal_path"]
+    robot_data['optimal_path_' + str(robot_ind)] = []
 
     temp2 = copy.deepcopy(robot_data)
     temp2["already_gone_node"][robot_ind] = []
     robot_data["already_gone_node"] = temp2["already_gone_node"]
 
-    temp3 = copy.deepcopy(robot_data)
-    temp3["current_robot_batch"][robot_ind] = []
-    robot_data["current_robot_batch"] = temp3["current_robot_batch"]
+    # temp3 = copy.deepcopy(robot_data)
+    if robot_data['current_robot_batch_'+str(robot_ind)] == robot_data["past_robot_batch"][robot_ind]:#수정되는 일없이 변화됨
+        robot_data['current_robot_batch_'+str(robot_ind)] =[]
+    else:#로봇이 배치를 할당받는 도중에 바뀌게 되버림
+        robot_data['current_robot_batch_'+str(robot_ind)] = robot_data['current_robot_batch_'+str(robot_ind)][
+                                                  len(robot_data['past_robot_batch'][robot_ind]):]
 
     temp4 = copy.deepcopy(robot_data)
     temp4['stop'][robot_ind] = True
@@ -59,7 +60,7 @@ def gui_data_update(robots, gui_data,robot_data):
         temp_gui_data["current_target"][robot_ind] = temp_robots[robot_ind].goal_point
 
         if robot_ind ==0:
-            batches = robot_data['current_robot_batch'][robot_ind]
+            batches = robot_data['current_robot_batch_'+str(robot_ind)]
             temp_gui_data["zero_robot_pick_point"] =  list(set(sum(batches, [])))  # 과거배치를 전부 합칩니다.
 
     gui_data["current_robot_position"] = temp_gui_data["current_robot_position"]
@@ -109,7 +110,10 @@ def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
                     temp[robot_ind] = False
                     robot_data['new_batch'] = temp
 
-                    optimal_path = robot_data["optimal_path"][robot_ind]
+                    optimal_path = robot_data["optimal_path_"+str(robot_ind)]
+                    while optimal_path ==[]:
+                        print("잘못된 경로할당", robot_ind)
+                        time.sleep(0.3)
 
                     new_robot = make_astar_path_robot(robot, shelf_grid_list, occupy_map,optimal_path)
                     robot = new_robot
@@ -118,6 +122,11 @@ def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
 
                     # Astar 경로 초기화 목표 노드 재설정
                 robot.astar_move(pre_coordinates, robot_coordinates, prec_coordinates, robot_ind)
+                temp = copy.deepcopy(robot_data["robot_step"])
+                temp[robot_ind] +=1
+                robot_data["robot_step"] = temp
+
+
                 if len(pre_coordinates) == len(robots):
                     pre_coordinates[robot_ind] = robot.current_point
 
@@ -134,6 +143,7 @@ def action_control( robot_data,shelf_grid_list,occupy_map, gui_data):
                 if robot.packing_point_arrive:
                     robot.packing_point_arrive = False
                     restart_robot(robot_data, robot, robot_ind)
+                    # print("로봇 ",robot_ind,"는 패킹 지점에 돌아왔습니다.")
                     temp2 = copy.deepcopy(gui_data["long_path"])
                     temp2[robot_ind] = []
                     gui_data["long_path"] = temp2

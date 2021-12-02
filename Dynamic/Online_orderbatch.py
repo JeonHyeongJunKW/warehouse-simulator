@@ -6,7 +6,9 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
 
     #로봇들이 기본적인 할당량을 가지고 있는지 확인하고,
     solved_orders_index = []
-    readonly_current_robot_batch = copy.deepcopy(robot_data["current_robot_batch"])#현재의 로봇배치를 넣는다.
+    readonly_current_robot_batch = []
+    for i in range(len(robot_data['robot'])):
+        readonly_current_robot_batch.append(robot_data['current_robot_batch_' + str(i)])
     solved_batches = readonly_current_robot_batch  # 현재의 로봇배치
     changed_robot_index = []  # 배치가 바뀐 로봇의 인덱스
     assigned_flag = [False for _ in range(len(readonly_current_robot_batch))]#초기할당이라면 order를 추가할당하지 않습니다.
@@ -17,7 +19,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     # print("FIFO")
     for robot_index, robot_batch in enumerate(readonly_current_robot_batch):
         if end_flag:
-            if len(robot_batch) == 0 and len(readonly_orders)-start_order < init_batch_size:#로봇의 배치사이즈가 0이고, 남은 주문의 사이즈가 초기 배치사이즈보다 작다면
+            if len(robot_data['current_robot_batch_' + str(robot_index)]) == 0 and len(readonly_orders)-start_order < init_batch_size:#로봇의 배치사이즈가 0이고, 남은 주문의 사이즈가 초기 배치사이즈보다 작다면
                 # order를 할당합니다.
                 solved_batches[robot_index] = readonly_orders[
                                               start_order:len(readonly_orders)]  # 현재 order들에서 일정그룹만을 가져와서 넣습니다.
@@ -26,7 +28,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
                 solved_orders_index = solved_orders_index + list(range(start_order, len(readonly_orders), 1))
                 start_order += len(readonly_orders)-start_order  # 새롭게 할당할 때 사용할 start_order를 수정합니다.
                 assigned_flag[robot_index] = True
-            elif len(robot_batch) == 0:
+            elif len(robot_data['current_robot_batch_' + str(robot_index)]) == 0:
                 # order를 할당합니다.
                 solved_batches[robot_index] = readonly_orders[
                                               start_order:start_order + init_batch_size]  # 현재 order들에서 일정그룹만을 가져와서 넣습니다.
@@ -41,7 +43,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
             # print("배치가 수정된 로봇들 : ", changed_robot_index)
             return solved_orders_index,solved_batches,changed_robot_index
         #큰일날 수 있는부분..
-        elif len(robot_batch) ==0:
+        elif len(robot_data['current_robot_batch_' + str(robot_index)]) ==0:
             #order를 할당합니다.
             solved_batches[robot_index] = readonly_orders[start_order:start_order+init_batch_size]#현재 order들에서 일정그룹만을 가져와서 넣습니다.
             changed_robot_index.append(robot_index)#바뀐 로봇 배치를 기록합니다.
@@ -67,9 +69,9 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
                 range(start_order, start_order + len(readonly_orders[start_order:]), 1))
             start_order += len(readonly_orders[start_order:])  # 새롭게 할당할 때 사용할 start_order를 수정합니다.
 
-        elif len(robot_batch) < max_batch_size:# 풀로 더넣을 수 있고, 기존 로봇이 가진 배치가 최대량보다 작아서 더넣을 수 있을 때
+        elif len(robot_data['current_robot_batch_' + str(robot_index)]) < max_batch_size:# 풀로 더넣을 수 있고, 기존 로봇이 가진 배치가 최대량보다 작아서 더넣을 수 있을 때
             # "order가 너무 작아 그래도 넣어"
-            if robot_data["current_robot_batch"][robot_index] ==0:
+            if robot_data["current_robot_batch_"+str(robot_index)] ==0:
                 print("뭔가 이상합니다.")
             # print("---------------------")
             # print("기존에 나는 이미 이만큼을 할당받았어..",solved_batches[robot_index])
@@ -94,6 +96,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     DEBUG_log("바뀐로봇들 일부", "DETAIL")
     # DEBUG_log(changed_robot_index[0:1],"DETAIL")
     # print("이번 step에 풀린 index : ", solved_orders_index)
+    # print("남은 주문수", len(readonly_orders))
     # print("현재까지 풀린 배치들 : ", solved_batches)
     # print("배치가 수정된 로봇들 : ", changed_robot_index)
     # print(solved_orders_index,solved_batches,changed_robot_index)
@@ -117,7 +120,9 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
     expired_time =expire_time
 
     solved_orders_index = []
-    readonly_current_robot_batch = copy.deepcopy(robot_data["current_robot_batch"])  # 현재의 로봇배치를 넣는다.
+    readonly_current_robot_batch = []
+    for i in range(len(robot_data['robot'])):
+        readonly_current_robot_batch.append(robot_data['current_robot_batch_' + str(i)])
     solved_batches = readonly_current_robot_batch  # 현재의 로봇배치
     changed_robot_index = []  # 배치가 바뀐 로봇의 인덱스
     new_order = False
@@ -136,14 +141,14 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
         if Is_picking_robot_cap_max(robot_data,max_batch_size):#이동중인 로봇의 용량이 꽉찾는가?
             DEBUG_log_tag("2. 이동중인 로봇의 용량이 꽉참",time.time() - add_time)
             if Is_remaining_robot(robot_data):# 네, 그럼 아직 이동하지않은 로봇이 있는가?
-
+                test_time = time.time()
                 solved_orders_index,solved_batches,changed_robot_index, deleted_order =\
                     Do_make_Q_robot(robot_data,
                                 buffer_orders,
                                 expired_list,
                                 init_batch_size,
                                 buffer_order_ind)# 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
-                DEBUG_log_tag("4. 이동중이지 않은 로봇에게 유통기한이 지난 order를 할당하는데 걸리는 시간 ", time.time() - add_time)
+                DEBUG_log_tag("4. 이동중이지 않은 로봇에게 유통기한이 지난 order를 할당하는데 걸리는 시간 ", time.time() - test_time)
                 Delete_orders_in_Buffer(buffer_order_ind,buffer_orders,buffer_time,deleted_order)
             else:# 모든 로봇이 바쁘다면?
                 DEBUG_log_tag("5. 넣을 수가 없음 ", time.time() - add_time)
@@ -221,11 +226,13 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                     good_match = Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size,bound_size)
                     DEBUG_log_tag("10. 큐에서 좋은 배치가 만들어지는지 확인하는 데 걸리는 시간", time.time() - check_time)
                     if [] != good_match :
+                        check_time = time.time()
                         solved_orders_index, solved_batches, changed_robot_index = Do_make_Q_robot_new_order(good_match,
                                                   robot_data,
                                                   buffer_order_ind,
                                                   buffer_orders,
                                                   buffer_time)# 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
+                        # print("do make q",time.time()-check_time)
                         # print("15. 남은 로봇중에 괜찮아서 넣을게")
                     else:
                         Do_save_in_Queue()# 아직 애매한 배치면 저장해버린다.
@@ -258,6 +265,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
     # print("배치가 수정된 로봇들 : ", changed_robot_index)
     # print(" ")
     # print(time.time()-start_time)
+    # print(solved_batches, solved_orders_index, changed_robot_index)
     return solved_orders_index,solved_batches,changed_robot_index
 
 online_order_batch_HCOB.buffered_order = []

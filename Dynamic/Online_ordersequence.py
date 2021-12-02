@@ -9,7 +9,7 @@ import random
 
 def update_tsp_node(robot_data, robot_index, mode="SIMPLE"):
     # 로봇의 과거배치를 받습니다.
-    if len(robot_data["current_robot_batch"][robot_index]) == 0:
+    if len(robot_data['current_robot_batch_'+str(robot_index)]) == 0:
         print("뭔가 이상합니다..")
     past_batch = robot_data['past_robot_batch'][robot_index]
     union_batch = list(set(sum(past_batch, [])))  # 과거배치를 전부 합칩니다.
@@ -21,21 +21,15 @@ def update_tsp_node(robot_data, robot_index, mode="SIMPLE"):
     # 이미 간 노드를 제거합니다.
     temp_batch = union_batch
     union_batch = [node for node in union_batch if node not in already_gone_node]
-    # print("--------------------------------------------------------------")
-    # print("실제에 추가된 배치",robot_data["current_robot_batch"][robot_index])
-    # print("과거에 가진 배치", robot_data["past_robot_batch"][robot_index])
-    # print("단독 ",union_batch)
-    # print("임시 배치 ",temp_batch)
-    # print("이미 간",already_gone_node)
 
     DEBUG_log_tag("로봇이 아직 안간 노드", union_batch, "VERY_DETAIL")
 
     # 배치에서 새로운 주문을 확인합니다. set을 사용하여 노드화합니다.
-    DEBUG_log_tag("로봇의 과거 배치사이즈", len(past_batch), "VERY_DETAIL")
-    DEBUG_log_tag("로봇의 최근 추가된 배치", robot_data['current_robot_batch'][robot_index][len(past_batch):], "VERY_DETAIL")
-    DEBUG_log_tag("set연산직후", set(sum(robot_data['current_robot_batch'][robot_index][len(past_batch):], [])),
-                  "VERY_DETAIL")
-    new_order = list(set(sum(robot_data['current_robot_batch'][robot_index][len(past_batch):], [])))
+    # DEBUG_log_tag("로봇의 과거 배치사이즈", len(past_batch), "VERY_DETAIL")
+    # DEBUG_log_tag("로봇의 최근 추가된 배치", robot_data['current_robot_batch'][robot_index][len(past_batch):], "VERY_DETAIL")
+    # DEBUG_log_tag("set연산직후", set(sum(robot_data['current_robot_batch'][robot_index][len(past_batch):], [])),
+    #               "VERY_DETAIL")
+    new_order = list(set(sum(robot_data['current_robot_batch_'+str(robot_index)][len(past_batch):], [])))
 
     # 아직 가지않은 노드와 새로운 노드를 더합니다.
     if mode == "OPT":
@@ -51,7 +45,7 @@ def update_tsp_node(robot_data, robot_index, mode="SIMPLE"):
     robot_data['already_gone_node'] = temp
 
     temp = copy.deepcopy(robot_data['past_robot_batch'])
-    temp[robot_index] = robot_data['current_robot_batch'][robot_index]
+    temp[robot_index] = copy.deepcopy(robot_data['current_robot_batch_'+str(robot_index)])
     robot_data['past_robot_batch'] = temp
 
     if mode == "OPT":
@@ -97,10 +91,12 @@ def solve_tsp_online(changed_robot_index, robot_data, node_point_y_x):
         additional_time += (time.time() - start_time)
         additional_count += 1
         # 경로를 등록합니다.
-        temp = copy.deepcopy(robot_data["optimal_path"])
-        temp[changed_robot] = optimized_path
-        robot_data["optimal_path"] = temp
-
+        # temp = copy.deepcopy(robot_data["optimal_path"])
+        # temp[changed_robot] = optimized_path
+        # robot_data["optimal_path"] = temp
+        robot_data['optimal_path_' + str(changed_robot)] = optimized_path
+        # if robot_data["optimal_path"][changed_robot] ==[]:
+        #     print("잘못된 opitmal path를 넣어버렸습니다.", changed_robot)
         # print("생성된 최적의 경로 : ",robot_data["optimal_path"][changed_robot])
         # 다시 움직이게 합니다.
         temp = copy.deepcopy(robot_data['stop'])
@@ -137,7 +133,7 @@ def solve_tsp_opt_online(changed_robot_index, robot_data, node_point_y_x):
 
         new_nodes, tsp_node = update_tsp_node(robot_data, changed_robot, "OPT")
         # print("new_nodes, tsp_node = ", new_nodes, tsp_node)
-        check = copy.deepcopy(robot_data["optimal_path"])
+        check = robot_data['optimal_path_' + str(changed_robot)]
         start_time = time.time()
         if len(tsp_node) == 0:
             # alg_time1 = time.time()
@@ -149,7 +145,7 @@ def solve_tsp_opt_online(changed_robot_index, robot_data, node_point_y_x):
             # print("ACO = ", time.time() - alg_time1)
         else:
 
-            optimized_path = check[changed_robot]
+            optimized_path = check
             optimized_path = opt_tsp_solver(current_coordinate,
                                             packing_coordinate,
                                             optimized_path,
@@ -160,9 +156,7 @@ def solve_tsp_opt_online(changed_robot_index, robot_data, node_point_y_x):
         additional_count += 1
         # optimal path의 index를 가져온다.
 
-        temp = copy.deepcopy(robot_data["optimal_path"])
-        temp[changed_robot] = optimized_path
-        robot_data["optimal_path"] = temp  # 기존 tsp로 저장한 최적의 경로
+        robot_data['optimal_path_' + str(changed_robot)] = optimized_path
 
         # print("생성된 최적의 경로 : ",robot_data["optimal_path"][changed_robot])
         # 다시 움직이게 합니다.

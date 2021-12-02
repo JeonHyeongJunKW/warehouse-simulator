@@ -74,17 +74,22 @@ class procees_tsp_solver:
             real_time = time.time()
             robots, robot_number = self.get_robot_number_batches(robot_data)
             try :
+                batch_time = time.time()
                 solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
+                self.algorithm_time += time.time()-batch_time
             except TypeError:
                 print(self.solve_batch(order_data,robots, robot_data))
                 print(self.all_mission_clear)
             #다끝났는지 확인하는 법.. 일단. 더이상 order를 생성 못해야함. orders도 확인해야함. 모든 로봇들이 새로운 배치를 기다리는지도 확인해야함.
+            real_time_2 = time.time()
+            # print("연산하는데 걸리는시간 ",time.time()-real_time)
+
             self.is_simulation_end(solved_orders_index, changed_robot_index,robot_data)
             if self.all_mission_clear:
                 self.work_time = time.time()-self.start_time
                 break
 
-            real_time_2 = time.time()
+
             self.delete_orders(order_data, solved_orders_index)
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
         #-------------------추가된 부분---------------------
@@ -197,11 +202,9 @@ class procees_tsp_solver:
     def change_batch_and_solve_tsp(self, solved_batches,changed_robot_index,robot_data):
         #배치를 반영합니다
         for robot_ind in changed_robot_index:
-            temp = copy.deepcopy(robot_data["current_robot_batch"])
             if len(solved_batches[robot_ind])==0:
                 print("배치하기에는 작습니다..")
-            temp[robot_ind] = solved_batches[robot_ind]
-            robot_data["current_robot_batch"] = temp
+            robot_data["current_robot_batch_"+str(robot_ind)] = solved_batches[robot_ind]
         DEBUG_log(changed_robot_index, "VERY_DETAIL")
         # DEBUG_log("주문 갯수 : " + str(len(current_order["orders"])), "VERY_DETAIL")
 
@@ -218,6 +221,7 @@ class procees_tsp_solver:
     def is_simulation_end(self, solved_orders_index, changed_robot_index,robot_data):
         self.order_counter += len(solved_orders_index)
         if self.max_order == self.order_counter:
+            # print(changed_robot_index)
             if len(changed_robot_index) == 0:
                 flag_check = True
                 for move in robot_data['stop']:
