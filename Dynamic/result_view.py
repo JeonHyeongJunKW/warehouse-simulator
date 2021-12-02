@@ -250,10 +250,10 @@ class result_sim_view(QWidget):
                                           self.robot_mover_data["completion_time"],
                                           self.robot_mover_data["robot_step"]])
         '''
-        algorithm_name = ['FCFS & ACO', "FCFS & OPT", "HCOB & OPT"]
+        algorithm_name = ['FCFS & ACO', "FCFS & Proposed", "HCOB & Proposed"]
         algorithm_color = ['black', 'red', 'gold']
         fig = plt.figure(figsize=(6, 5.5))
-        plt.title("Average Algorithm time", fontsize=12)
+        plt.title("Total Algorithm time", fontsize=12)
         # plt.bar(np.arange(3), np.array([self.saved_result[0][0]/self.saved_result[0][1],
         #                                  self.saved_result[1][0]/self.saved_result[1][1],
         #                                  self.saved_result[2][0]/self.saved_result[2][1]]),

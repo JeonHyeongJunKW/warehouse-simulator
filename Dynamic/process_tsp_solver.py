@@ -32,7 +32,7 @@ class procees_tsp_solver:
 
         self.work_time = 0
 
-        self.bound_size = 400
+        self.bound_size = 300
         self.expire_time = 10 # 30 /60 ~ 낮을수록 좀더 좋은 결과에 가까운듯함
 
     def run(self, order_data,solver_data,robot_data):
@@ -83,6 +83,7 @@ class procees_tsp_solver:
             #다끝났는지 확인하는 법.. 일단. 더이상 order를 생성 못해야함. orders도 확인해야함. 모든 로봇들이 새로운 배치를 기다리는지도 확인해야함.
             real_time_2 = time.time()
             # print("연산하는데 걸리는시간 ",time.time()-real_time)
+            # print("주문 수 ", len(order_data["orders"]))
 
             self.is_simulation_end(solved_orders_index, changed_robot_index,robot_data)
             if self.all_mission_clear:
@@ -241,6 +242,10 @@ class procees_tsp_solver:
         for robot in robot_data["robot"]:
             temp_list.append(robot.step)
         robot_data["robot_step"] = copy.deepcopy(temp_list)
+        # print([robot_data["full_algorithm_time"],
+        #        robot_data["full_algorithm_count"],
+        #        robot_data["completion_time"],
+        #        robot_data["robot_step"]], sum(robot_data["robot_step"]))
         self.algorithm_time =0
         self.algorithm_count =0
         self.work_time = 0

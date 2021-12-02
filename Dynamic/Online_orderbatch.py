@@ -147,7 +147,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                                 buffer_orders,
                                 expired_list,
                                 init_batch_size,
-                                buffer_order_ind)# 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
+                                buffer_order_ind)# 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 DEBUG_log_tag("4. 이동중이지 않은 로봇에게 유통기한이 지난 order를 할당하는데 걸리는 시간 ", time.time() - test_time)
                 Delete_orders_in_Buffer(buffer_order_ind,buffer_orders,buffer_time,deleted_order)
             else:# 모든 로봇이 바쁘다면?
@@ -179,7 +179,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                                         buffer_orders,
                                         expired_list,
                                         init_batch_size,
-                                        buffer_order_ind)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
+                                        buffer_order_ind)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및  새로운 로봇 출발~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     DEBUG_log_tag("7. 남은 로봇에게 유연하게 할당하는 데 걸리는 시간", time.time() - check_time)
                     Delete_orders_in_Buffer(buffer_order_ind, buffer_orders, buffer_time, deleted_order)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
                 else:
@@ -231,7 +231,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                                                   robot_data,
                                                   buffer_order_ind,
                                                   buffer_orders,
-                                                  buffer_time)# 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
+                                                  buffer_time)# 현재 남는 order랑 유사도가 좋은 order를 할당 및  새로운 로봇 출발~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         # print("do make q",time.time()-check_time)
                         # print("15. 남은 로봇중에 괜찮아서 넣을게")
                     else:
@@ -252,7 +252,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                                                                                                          robot_data,
                                                                                                          buffer_order_ind,
                                                                                                          buffer_orders,
-                                                                                                         buffer_time)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및 새로운 로봇 출발
+                                                                                                         buffer_time)  # 현재 남는 order랑 유사도가 좋은 order를 할당 및  새로운 로봇 출발~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     # print("20. 괜찮은 주문이 있어서 출발")
                 else:
                     Do_save_in_Queue()  # 아직 애매한 배치면 저장해버린다.
@@ -263,7 +263,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
     # print("이번 step에 풀린 index : ", solved_orders_index)
     # print("현재까지 풀린 배치들 : ", solved_batches)
     # print("배치가 수정된 로봇들 : ", changed_robot_index)
-    # print(" ")
+    # print("남은 주문 수", len(online_order_batch_HCOB.past_order))
     # print(time.time()-start_time)
     # print(solved_batches, solved_orders_index, changed_robot_index)
     return solved_orders_index,solved_batches,changed_robot_index
