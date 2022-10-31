@@ -15,8 +15,8 @@ class procees_tsp_solver:
         self.solver_data = None
         self.robot_data = None
         self.node_point_y_x = None
-        self.using_order_batch = "FIFO"
-        self.using_order_sequence = "TSP_ONLINE"
+        self.using_order_batch = "HCOB" #"HCOB"/ "FIFO"
+        self.using_order_sequence = "OPT" #"OPT" / "TSP_ONLINE"
         self.init_batch_size = 3  # 초기에 로봇에게 할당할 배치사이즈
         self.max_batch_size = 6  # interventionist방식에서 로봇에 대한 최대 배치사이즈(CAPACITY)
         self.all_mission_clear = False
@@ -24,7 +24,7 @@ class procees_tsp_solver:
         self.max_order =1000
         self.order_counter =0
         self.start_time =0
-        
+        self.batch_only_time = 0
         DEBUG_log("초기 배치사이즈 : " + str(self.init_batch_size) + " 최대 배치사이즈 : " + str(self.max_batch_size), "DETAIL")
         
         self.algorithm_time = 0.0
@@ -33,7 +33,7 @@ class procees_tsp_solver:
         self.work_time = 0
 
         self.bound_size = 300
-        self.expire_time = 10 # 30 /60 ~ 낮을수록 좀더 좋은 결과에 가까운듯함
+        self.expire_time = 70 # 30 /60 ~ 낮을수록 좀더 좋은 결과에 가까운듯함
 
     def run(self, order_data,solver_data,robot_data):
         self.order_data = order_data
@@ -66,17 +66,20 @@ class procees_tsp_solver:
     def process(self,order_data, solver_data,robot_data):
         self.initalize(solver_data)#각 노드의 좌표를 변형합니다.
         self.start_time = time.time()
-        print("new start")
+        print("-----------------------------------")
+        self.batch_only_time = 0
         while True:
             if self.solver_data["reset"]:
                 break
             #로봇정보와 로봇의 대수를 가져옵니다.
-            real_time = time.time()
             robots, robot_number = self.get_robot_number_batches(robot_data)
             try :
                 batch_time = time.time()
                 solved_orders_index, solved_batches, changed_robot_index = self.solve_batch(order_data,robots, robot_data)
-                self.algorithm_time += time.time()-batch_time
+                inter_time = time.time()-batch_time
+                print("배치 푸는데 걸리는 시간", inter_time)
+                self.batch_only_time += inter_time
+                self.algorithm_time += inter_time
             except TypeError:
                 print(self.solve_batch(order_data,robots, robot_data))
                 print(self.all_mission_clear)
@@ -93,10 +96,10 @@ class procees_tsp_solver:
 
             self.delete_orders(order_data, solved_orders_index)
             self.change_batch_and_solve_tsp(solved_batches,changed_robot_index,robot_data)
-        #-------------------추가된 부분---------------------
+        # save tsp result
             time.sleep(1)
         self.save_result(robot_data)
-        print("i save result")
+        # print("i save result")
 
 
     def solve_batch(self, current_orders, readonly_robot_data, robot_data):
@@ -232,15 +235,31 @@ class procees_tsp_solver:
 
                 if flag_check:
                     self.all_mission_clear = True
-                    print("all mission clear")
+                    # print("all mission clear")
 
     def save_result(self, robot_data):
         robot_data["full_algorithm_time"] = self.algorithm_time
         robot_data["full_algorithm_count"] = self.algorithm_count
         robot_data["completion_time"] = self.work_time
+        if self.using_order_batch == "FIFO":
+            print("FIFO")
+        else :
+            print("HC")
+
+        if self.using_order_sequence == "OPT":
+            print("k-opt")
+        else :
+            print("ACO")
+        print("algorithm count : ", self.algorithm_count)
+        print("completion time : ", self.work_time)
+        print("full_algorithm_time : ", self.algorithm_time)
+        print("배치에 할당된 시간 : ", self.batch_only_time)
+        print("tsp에 할당된 시간 : ", self.algorithm_time - self.batch_only_time)
+        print("로봇의 이동 거리 : ")
         temp_list = []
         for robot in robot_data["robot"]:
             temp_list.append(robot.step)
+            print(robot.step,end=", ")
         robot_data["robot_step"] = copy.deepcopy(temp_list)
         # print([robot_data["full_algorithm_time"],
         #        robot_data["full_algorithm_count"],

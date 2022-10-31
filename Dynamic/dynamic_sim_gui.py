@@ -26,7 +26,6 @@ class Dynamic_Sim(QWidget):
 
         # tsp_solver에서 사용하는 공유변수 :
         self.tsp_solver_data = Manager().dict()
-
         self.robot_mover_data = Manager().dict()
         # 관리되는 프로세스 후보들
         self.process_order_maker = procees_order_maker() # 동적으로 주문을 만드는 프로세스
@@ -40,10 +39,9 @@ class Dynamic_Sim(QWidget):
 
         self.gui_data = Manager().dict()
 
-
-        self.buttonRealView.clicked.connect(self.Real_Simulation_Start)
-        self.buttonResultView.clicked.connect(self.Result_Simulation_Start)
-        self.buttonGoodParam.clicked.connect(self.start_param_get)
+        self.buttonRealView.clicked.connect(self.Real_Simulation_Start) # 실제 동작 확인하기
+        self.buttonResultView.clicked.connect(self.Result_Simulation_Start)  # 빠른 결과 확인하기
+        self.buttonGoodParam.clicked.connect(self.start_param_get)  # 좋은 파라미터 얻기
         self.result_sim_view = result_sim_view()
 
 
@@ -83,8 +81,6 @@ class Dynamic_Sim(QWidget):
         self.robot_mover_data["robot_info"] = self.sim_data
         self.robot_mover_data["map_data"] = self.map_data
         self.robot_mover_data["ui_data"] = self.ui_data
-
-
 
         #GUI담당 프로세스 초기화
         self.gui_data["map_data"] = self.map_data

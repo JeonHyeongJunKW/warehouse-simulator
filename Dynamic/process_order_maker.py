@@ -60,3 +60,4 @@ class procees_order_maker:
             new_order = [list(set([random.choice(list(range(kind))) for _ in range(order_size)])) for __ in
                          range(order_rate)]
             order_data["orders"] = order_data["orders"] + new_order
+            print("주문생성기 : ",len(order_data["orders"])," +=",len(new_order))

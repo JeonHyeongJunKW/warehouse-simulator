@@ -16,35 +16,37 @@ import os
 from multiprocessing import Process, Manager
 from sub_proc_simulator import *
 from fast_simulation import *
-
 from Dynamic.dynamic_sim_gui import Dynamic_Sim
+
 class WindowClass(QMainWindow, form_class):
     def __init__(self):
         super(WindowClass,self).__init__()
         self.setupUi(self)
         self.setWindowTitle("TSP 시뮬레이터")
-        self.a = 0
         self.move(500, 300)
         self.setFixedWidth(263)
         self.setFixedHeight(476)
 
-        self.mapMaker = Widget_Warehouse()
-        self.ui_info = [self.mapMaker.init_map_x, self.mapMaker.init_map_y]
+        self.mapMaker = Widget_Warehouse()  # warehouse make tool Widget
         self.mapMaker.hide()
 
-        self.simulation_maker = Widget_SimSet()
+        self.ui_info = [self.mapMaker.init_map_x, self.mapMaker.init_map_y]  # init parameter
+
+
+        self.simulation_maker = Widget_SimSet()  # simulation setting tool widget
         self.simulation_maker.hide()
 
         self.simulator = Widget_Simulator_no_gui()
         self.simulator.hide()
         self.map_data = None
-        self.run_count = 0#시물레이션을 돌린횟수입니다.
+        self.run_count = 0  #시물레이션을 돌린횟수입니다.
+
         #시그널링 설정
         self.button_openmapmaker.clicked.connect(self.openMap)
         self.button_loadMap.clicked.connect(self.loadMap)
         self.button_paramset.clicked.connect(self.setSim)
-        self.button_simStart.clicked.connect(self.openSimulator)
-        self.button_simStart_dynamic.clicked.connect(self.openDynamicSimulator)
+        self.button_simStart.clicked.connect(self.openSimulator)  # start static simulator(static order picking)
+        self.button_simStart_dynamic.clicked.connect(self.openDynamicSimulator)  # start dynamic simulator(dynamic order picking , order is arrived)
 
         #---21-11-17 : 다이나믹 시물레이션 추가
         self.dynamic_simulation = None
@@ -78,10 +80,10 @@ class WindowClass(QMainWindow, form_class):
 
     def openSimulator(self):
         if self.simulator :
-            del self.simulator#시물레이터를 삭제합니다.
+            del self.simulator #시물레이터를 삭제합니다.
 
-        self.simulator = Widget_Simulator_no_gui()#다시만듭니다.
-        if not self.map_data:#맵이 있는지 확인합니다.
+        self.simulator = Widget_Simulator_no_gui()  # 시물레이터를 시작합니다.
+        if not self.map_data:  # 세팅된 맵이 있는지 확인합니다.
             msgBox = QMessageBox()
             msgBox.setWindowTitle("경고")
             msgBox.setText("맵의 정보가 없습니다.")
@@ -104,9 +106,6 @@ class WindowClass(QMainWindow, form_class):
         self.sim_data['ui_info'] = self.ui_info
         self.sim_data['map_data'] = self.map_data
 
-        #이제 order를 만들어주는 쪽과 시물레이션을 돌리는쪽에서 결과를 얻어옵니다.
-        # self.order_data['is_start'] = True
-        # self.sim_data['is_start'] = True
 
         self.simulator.start_setting()  # 그냥 시작합니다.
         self.simulator.timer.start(500)
@@ -162,15 +161,18 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         app.setAttribute(Qt.AA_EnableHighDpiScaling)
         #시물레이션을 본격적으로 돌리는 프로세스 입니다.
-        sim_data = Manager().dict()
-        order_data = Manager().dict()
-        sim_data["tsp_solver"] = 'NO_TSP'
-        order_data["is_start"] = False
-        sim_data["is_start"] = False
-        sim_data["fast_start"] = False
-        sim_data["robot_cordinates"] =[]
-        sim_data["goal_cordinates"] = []
-        sim_data["shelf_node"] = []
+
+        sim_data = Manager().dict()  # shared simulation parameter
+        order_data = Manager().dict()  # shared order parameter
+        sim_data["tsp_solver"] = 'NO_TSP'  # FCFS way
+
+        order_data["is_start"] = False  # Purpose : order generator start check
+        sim_data["is_start"] = False  # Purpose : main simulator start check
+        sim_data["fast_start"] = False  # Purpose : fast simulator start check
+
+        sim_data["robot_cordinates"] =[]  # Purpose : current robot pose(dynamic)
+        sim_data["goal_cordinates"] = []  # Purpose : current robot goal pose(dynamic)
+        sim_data["shelf_node"] = []  # Purpose : shelf node coordinates (static after simulation start)
         sim_data["robot_routes"] = []
         sim_data["packing_ind"] = []
         sim_data["packing_color"] = []
@@ -182,8 +184,9 @@ if __name__ == "__main__":
         sim_data["compare_tsp_solver"] = "NO_TSP"
         sim_data["tsp_length"] = [1000,1000,1000,1000,1000,1000]
         sim_data['compare_time'] = [0,0,0,0,0,0]
-        order_data["is_set_order"] = False#선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
-        order_data["is_set_initOrder"] = False#초기 주문들이 다 정해졋을때, 사용하는 변수
+
+        order_data["is_set_order"] = False  # 선반의 개수가 다 정해졋는지 확인할 때, 사용하는변수
+        order_data["is_set_initOrder"] = False  # 초기 주문들이 다 정해졋을때, 사용하는 변수
         order_data["len_order"] =0
         order_data["end_flag"] = False
 
@@ -191,7 +194,7 @@ if __name__ == "__main__":
         sim_data['solver_set'] = ['NO_TSP',"DC","GREEDY","PSO","GA","ACO"]
         sim_data['solver_ind'] = 0
         sim_data['order_do'] = 0
-        sim_data['algorithm_time'] = [[],[],[],[],[],[]]
+        sim_data['algorithm_time'] = [[], [], [], [], [], []]
         sim_data['algorithm_step'] = [[], [], [], [], [], []]
         sim_data['algorithm_full_time'] = [0. for _ in range(len(sim_data['solver_set']))]
         sim_data['simulation_end'] = False
@@ -201,16 +204,19 @@ if __name__ == "__main__":
         sim_data['Computation_time'] = [0. for _ in range(len(sim_data['solver_set']))]
         sim_data["force_die"] = False
         sim_data["doing_order"] =0
-        order_maker = Process(target=warehouse_order_maker,args=(order_data,1))
-        warehouse_tsp_solver = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))
-        warehouse_fast_solver = Process(target=process_Fast_sim, args=(sim_data, order_data))
-        order_maker.start()
-        warehouse_tsp_solver.start()
-        warehouse_fast_solver.start()
+
+        order_maker_process = Process(target=warehouse_order_maker, args=(order_data, 1))  # main simulator
+        warehouse_main_solver_process = Process(target=warehouse_tsp_solver, args=(sim_data,order_data))  # main simulator
+        warehouse_fast_solver_process = Process(target=process_Fast_sim, args=(sim_data, order_data))  # fast simulator
+
+        order_maker_process.start()  # main simulator start
+        warehouse_main_solver_process.start() # main simulator start
+        warehouse_fast_solver_process.start()
+
         #GUI를 담당하는 프로세스 입니다.
         myWindow = WindowClass()
-        myWindow.getProcess(order_maker,warehouse_fast_solver,warehouse_tsp_solver)
-        myWindow.set_data(order_data,sim_data)
+        myWindow.getProcess(order_maker_process, warehouse_fast_solver_process, warehouse_main_solver_process)
+        myWindow.set_data(order_data, sim_data)
         myWindow.show()
         sys.exit(app.exec_())
     except:

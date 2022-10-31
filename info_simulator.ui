@@ -60,27 +60,6 @@
     <string>결과 보기</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="button_saveresult">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>570</x>
-     <y>70</y>
-     <width>101</width>
-     <height>81</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>19</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>결과 저장하기</string>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections/>

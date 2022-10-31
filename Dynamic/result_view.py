@@ -45,7 +45,7 @@ class result_sim_view(QWidget):
         self.gui_data = Manager().dict()
         self.timer = QTimer(self)
         self.timer2 = QTimer(self)##----------------------------수정한 부분 11/27
-        self.timer.timeout.connect(self.redo_check)
+        self.timer.timeout.connect(self.redo_check) #3번씩 나눠서 돌립니다.
         self.timer2.timeout.connect(self.param_exp)##----------------------------수정한 부분 11/27
         self.sim_count =0
         self.saved_result = []
@@ -62,7 +62,7 @@ class result_sim_view(QWidget):
         self.process_order_maker.reset()
         self.process_tsp_solver.reset()
         self.process_robot_mover.reset()
-        self.timer.start(100)
+        self.timer.start(100)#3번씩 돌려봅니다.
         self.robot_mover_data["the_end"] = True
 
     def param_start(self):##----------------------------수정한 부분 11/27
@@ -82,6 +82,7 @@ class result_sim_view(QWidget):
                 self.tested_param.append([bound_size,expire_time])##----------------------------수정한 부분 11/27
         self.timer2.start(100)##----------------------------수정한 부분 11/27
         self.robot_mover_data["the_end"] = True##----------------------------수정한 부분 11/27
+
     def param_exp(self):##----------------------------수정한 부분 11/27
         if self.robot_mover_data["the_end"]:##----------------------------수정한 부분 11/27
             ##----------------------------이 아래 전부...

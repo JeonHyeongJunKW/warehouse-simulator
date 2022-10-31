@@ -38,7 +38,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
                 assigned_flag[robot_index] = True
         elif len(readonly_orders)-start_order < init_batch_size:
             # print("현재 배치의 오더 배치들",solved_batches)
-            # print("이번 step에 풀린 index : ", solved_orders_index)
+            print("이번 step에 풀린 index : ", solved_orders_index)
             # print("현재까지 풀린 배치들 : ", solved_batches)
             # print("배치가 수정된 로봇들 : ", changed_robot_index)
             return solved_orders_index,solved_batches,changed_robot_index
@@ -95,7 +95,7 @@ def online_order_batch_FIFO(readonly_orders, init_batch_size, max_batch_size, ro
     DEBUG_log(solved_batches,"VERY_DETAIL")
     DEBUG_log("바뀐로봇들 일부", "DETAIL")
     # DEBUG_log(changed_robot_index[0:1],"DETAIL")
-    # print("이번 step에 풀린 index : ", solved_orders_index)
+    print("이번 step에 풀린 index : ", solved_orders_index)
     # print("남은 주문수", len(readonly_orders))
     # print("현재까지 풀린 배치들 : ", solved_batches)
     # print("배치가 수정된 로봇들 : ", changed_robot_index)
@@ -124,6 +124,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
     for i in range(len(robot_data['robot'])):
         readonly_current_robot_batch.append(robot_data['current_robot_batch_' + str(i)])
     solved_batches = readonly_current_robot_batch  # 현재의 로봇배치
+    print("할당전 복사된 주문수 ", len(readonly_orders))
     changed_robot_index = []  # 배치가 바뀐 로봇의 인덱스
     new_order = False
     if len(readonly_orders) > len(online_order_batch_HCOB.past_order): #order가 추가되었는지 확인한다.
@@ -224,6 +225,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                 if Is_remaining_robot(robot_data):  # 아직 이동하지않은 로봇이 있는가?
                     check_time = time.time()
                     good_match = Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size,bound_size)
+                    # print("good match 입니다. ",good_match)
                     DEBUG_log_tag("10. 큐에서 좋은 배치가 만들어지는지 확인하는 데 걸리는 시간", time.time() - check_time)
                     if [] != good_match :
                         check_time = time.time()
@@ -232,6 +234,7 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
                                                   buffer_order_ind,
                                                   buffer_orders,
                                                   buffer_time)# 현재 남는 order랑 유사도가 좋은 order를 할당 및  새로운 로봇 출발~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        # print('solved_orders index', solved_orders_index)
                         # print("do make q",time.time()-check_time)
                         # print("15. 남은 로봇중에 괜찮아서 넣을게")
                     else:
@@ -266,6 +269,9 @@ def online_order_batch_HCOB(readonly_orders, init_batch_size, max_batch_size, ro
     # print("남은 주문 수", len(online_order_batch_HCOB.past_order))
     # print(time.time()-start_time)
     # print(solved_batches, solved_orders_index, changed_robot_index)
+    print("현재 버퍼에 남은 order의 index", online_order_batch_HCOB.buffered_order_ind)
+    print("이번 step에 풀린 index : ", solved_orders_index)
+    # print("현재까지 풀린 배치들 : ", solved_batches)
     return solved_orders_index,solved_batches,changed_robot_index
 
 online_order_batch_HCOB.buffered_order = []

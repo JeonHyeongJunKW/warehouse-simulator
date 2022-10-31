@@ -775,7 +775,6 @@ class sim_viwer(QWidget):
         self.qPixmapVar = QPixmap()
         self.qPixmapVar.load("result/전체수행시간.png")
         self.qPixmapVar = self.qPixmapVar.scaled(self.label_tet.width(), self.label_tet.height(),Qt.KeepAspectRatio)
-        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_tet.width(), self.label_tet.height())
         self.label_tet.setPixmap(self.qPixmapVar)
 
         self.qPixmapVar = QPixmap()
@@ -786,7 +785,6 @@ class sim_viwer(QWidget):
         self.qPixmapVar = QPixmap()
         self.qPixmapVar.load("result/평균이동시간.png")
         self.qPixmapVar = self.qPixmapVar.scaled(self.label_atd.width(), self.label_atd.height(),Qt.KeepAspectRatio)
-        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_atd.width(), self.label_atd.height())
         self.label_atd.setPixmap(self.qPixmapVar)
 
         self.qPixmapVar = QPixmap()
@@ -794,26 +792,17 @@ class sim_viwer(QWidget):
         self.qPixmapVar = self.qPixmapVar.scaled(self.label_ct.width(), self.label_ct.height(), Qt.KeepAspectRatio)
         self.label_ct.setPixmap(self.qPixmapVar)
 
-        # self.qPixmapVar = QPixmap()
-        # self.qPixmapVar.load("result/notsp_bp.png")
-        # self.qPixmapVar = self.qPixmapVar.scaled(self.label_no_tsp.width(), self.label_no_tsp.height())
-        # self.label_no_tsp.setPixmap(self.qPixmapVar)
 
 class Widget_Simulator_no_gui(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         uic.loadUi("info_simulator.ui",self)
-        # self.is_view_shelf = False
-        # self.is_view_route =False
-        # self.is_view_full_route = False
-        # self.checkBox_viewAllShelf.stateChanged.connect(self.viewShelf)
+
         self.timer = QTimer(self)
         self.tsp_mode = "ACO"
         self.timer.timeout.connect(self.update_progress)
-        self.button_saveresult.clicked.connect(self.saveresult)
         self.button_showresult.clicked.connect(self.showresult)
         self.sim_viwer_a = sim_viwer()
-        self.button_saveresult.hide()
 
     def showresult(self):
         to_el_time = self.sim_data['Total_elapsed_time']
@@ -842,15 +831,8 @@ class Widget_Simulator_no_gui(QWidget):
         self.sim_data['Average_travel_distance'] = [0. for _ in range(len(self.sim_data['solver_set']))]
         self.sim_data["force_die"] = True
         self.button_showresult.setDisabled(True)
-        self.button_saveresult.setDisabled(True)
         # print("all dead")
         self.timer.stop()
-
-    def saveresult(self):
-        al_time = self.sim_data['algorithm_time']
-        al_step = self.sim_data['algorithm_step']
-        al_full_time = self.sim_data['algorithm_full_time']
-        makePDF(al_time,al_step,al_full_time)
 
     def update_progress(self):
         do_order = self.sim_data['order_do']
@@ -859,7 +841,6 @@ class Widget_Simulator_no_gui(QWidget):
         self.progressBar.setValue(percent)
         if percent ==100 :
             self.button_showresult.setEnabled(True)
-            # self.button_saveresult.setEnabled(True)
 
             self.map_drawer = Widget_drawMap(self)
             self.map_drawer.hide()

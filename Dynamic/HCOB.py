@@ -6,13 +6,23 @@ from Dynamic.DEBUG_tool import DEBUG_log,DEBUG_log_tag
 # distance_bound = 500
 additional_bound =500
 max_robot =5
+all_time_expired_list = []
+main_start_time = 0
+is_main_start =False
 def Is_Expiration(buffer_time,expired_list,buffer_order_ind):
+    global is_main_start, main_start_time,all_time_expired_list
     return_flag = False
+    if not is_main_start:
+        is_main_start = True
+        main_start_time = time.time()
+
     for i, exp_time in enumerate(buffer_time):
         if exp_time - time.time() < 0:#만료시간을 넘겼다면?
             expired_list.append(buffer_order_ind[i])#현재 큐에서 만료된걸 넣는다. ===>주문의 고유 인덱스를 넣는다.
             return_flag = True#만약에 하나라도 만료된게 있으면 True를 반환
-
+    print("만기된 주문수 : ",len(expired_list))
+    all_time_expired_list.append([time.time()-main_start_time, len(expired_list)])
+    print(all_time_expired_list)
     if return_flag:
         return True
 
@@ -184,46 +194,46 @@ def Do_apply_order(good_match,robot_data,buffer_order_ind,buffer_orders,buffer_t
 
 def Is_maded_good_batch_in_Queue(buffer_orders,node_point_y_x,init_batch_size,bound_size):
     #좋은 집합이 만들어지는가? 5개 정도의?
-    order_set = copy.deepcopy(buffer_orders)
+    order_set = copy.deepcopy(buffer_orders)#주문수 x 아이템수
     return_set = []
-    for j in range(max_robot):
+    # print("order set : ", order_set)
+    not_batched_orders_idx = [i for i in range(len(buffer_orders))]
+    for _ in range(max_robot):
         good_order = []
         for i, seed_order_ind in enumerate(order_set):
-            seed_order = [node_point_y_x[j] for j in seed_order_ind]#시드 주문을 여기다가 넣는다.
+            if i not in not_batched_orders_idx:#없으면 탈출~
+                continue
+            seed_order = [node_point_y_x[idx_seed] for idx_seed in seed_order_ind]#시드 주문의 아이템 좌표들을 여기다가 넣는다.
             other_order =copy.deepcopy(order_set)
-            del other_order[i]
-            item_min_distance = []
-            for k, other_order_ind in enumerate(other_order):
-               one_other_order = [node_point_y_x[j] for j in other_order_ind]
-               distance = find_small_dis(seed_order,one_other_order)
-               item_min_distance.append(distance)
-            item_dis = np.array(item_min_distance)
-            same_batch_ind = np.argsort(item_dis).tolist()[:init_batch_size-1]
-
-
-            if len(same_batch_ind) ==0:
+            # del other_order[i]
+            item_min_distance = []# 아직 배치되지 않은 주문들
+            batch_test_order_idx = []
+            for k, other_order_ind in enumerate(other_order):#seed order와 나머지 order를 구분합니다.
+                if k == i or k not in not_batched_orders_idx:#seed order이거나 이미 배치에 들어간 주문이면 나갑니다.
+                    continue
+                one_other_order = [node_point_y_x[idx_other] for idx_other in other_order_ind]##좌표값을 넣습니디.
+                distance = find_small_dis(seed_order,one_other_order)#아직 배치되지 않는 주문들 사이의 거리
+                item_min_distance.append(distance)
+                batch_test_order_idx.append(k)#해당 주문의 인덱스를 넣습니다.
+            item_dis = np.array(item_min_distance) #seed order와 나머지 order 사이의 거리를 구합니다. 이것은 seed order 내에서의 인덱스입니디ㅏ.
+            same_batch_ind = np.argsort(item_dis).tolist()[:init_batch_size-1] #작은 거리순으로 정렬합니다.
+            if len(same_batch_ind) < init_batch_size-1:#주문의 수를 구합니다. ----->이부분 수정
                 continue
             # print("마지막 거리", item_dis[same_batch_ind[-1]]/len(seed_order_ind))
-            if item_dis[same_batch_ind[-1]]/len(seed_order_ind) >bound_size+additional_bound:
+            if item_dis[same_batch_ind[-1]]/len(seed_order_ind) >bound_size+additional_bound:#마지막에 주문에 대한 주문사이의 평균 거리를 구합니다. ~~이부분은 논문이랑 틀림
                 continue
             else :
                 #현재 seed order(i)에 대해서, same_batch_ind에 속하는 order를 찾아서 하나로 묶는다.
-                seed_order_last = i
-                other_order_last = [ind  if ind <i else ind+1 for ind in same_batch_ind]#만약에 seed의 index보다 크거나 같다면 인덱스 값을 하나 더 올린다.
+                seed_order_last = i#현재 seed order의 인덱스, 근데 order set에서 지워져야함..
+                other_order_last = [batch_test_order_idx[ind] for ind in same_batch_ind]#seed의 index + 배치에 속하는 order set의 인덱스
                 # print("이게 크다고?", other_order_last)
-                other_order_last.append(seed_order_last)
-                other_order_last.sort(reverse=True)
+                other_order_last.append(seed_order_last)#최종적으로 시드가된 주문들
+                for value in other_order_last:
+                    not_batched_orders_idx.remove(value)#배치되지않은 리스트에서 지워줍니다.
+                other_order_last.sort(reverse=True)# 내림차순 정렬
                 good_order = other_order_last
                 return_set.append(good_order)
                 break
-        # print(""good_order)
-        for k in good_order:
-            try:
-                del order_set[k]
-            except IndexError:
-                print(order_set)
-                print("없는 성분입니다.",k)
-                time.sleep(10)
     return return_set
 def Do_make_Q_robot_new_order(good_match, robot_data, buffer_order_ind, buffer_orders, buffer_time):
     # 만들고나서, 바뀐 로봇인덱스, solved_batches(전체 배치), solved_orders_index(배치가된 order 번호)를 반환해야함..
@@ -308,24 +318,24 @@ def Is_good_to_picking_robot_apply_new_order(robot_data,buffer_orders,buffer_ord
                 no_insert = False
                 check_time = datetime.datetime.now()
                 already_gone_node = robot_info_data['already_gone_node'][robot_ind]
-                DEBUG_log_tag("그냥 이미 간 노드 가져오는데 걸리는 시간 us", (datetime.datetime.now() - check_time).microseconds)
-                DEBUG_log_tag("union batch 갯수", len(union_batch))
-                DEBUG_log_tag("이미 간 노드 갯수", len(already_gone_node))
+                # DEBUG_log_tag("그냥 이미 간 노드 가져오는데 걸리는 시간 us", (datetime.datetime.now() - check_time).microseconds)
+                # DEBUG_log_tag("union batch 갯수", len(union_batch))
+                # DEBUG_log_tag("이미 간 노드 갯수", len(already_gone_node))
                 # union_batch = np.array(union_batch)
                 # already_gone_node =np.array(already_gone_node)
                 # union_batch_notgo = [node for node in union_batch if node not in already_gone_node]  # 앞으로 로봇이 가야하는 노드 수
                 # union_batch_notgo = np.intersect1d(union_batch,already_gone_node).tolist()
                 check_time_3 =datetime.datetime.now()
                 union_batch_notgo = robot_info_data['not_go'][robot_ind]
-                DEBUG_log_tag("아직 가지않는 노드만 발라 내는 데 걸리는 시간 us", (datetime.datetime.now() - check_time_3).microseconds)
+                # DEBUG_log_tag("아직 가지않는 노드만 발라 내는 데 걸리는 시간 us", (datetime.datetime.now() - check_time_3).microseconds)
                 check_time_4 = datetime.datetime.now()
                 current_coordinate = recovery(robot_info_data["packing_pose_recovery"],
                                               robot_info_data["robot"][robot_ind].current_point)  # 현재 로봇의 좌표
-                DEBUG_log_tag("리커버리에 걸리는 시간", (datetime.datetime.now() - check_time_4).microseconds)
-                DEBUG_log_tag("로봇과의 유사도 비교전에 걸리는 시간 us", (datetime.datetime.now() - check_time).microseconds)
+                # DEBUG_log_tag("리커버리에 걸리는 시간", (datetime.datetime.now() - check_time_4).microseconds)
+                # DEBUG_log_tag("로봇과의 유사도 비교전에 걸리는 시간 us", (datetime.datetime.now() - check_time).microseconds)
                 normalize_dis = Similarity_btw_robot_order(union_batch_notgo, current_coordinate, compare_order,
                                                            node_point_y_x)
-                DEBUG_log_tag("로봇과의 유사도 비교에 걸리는 시간 us",(datetime.datetime.now() - check_time).microseconds)
+                # DEBUG_log_tag("로봇과의 유사도 비교에 걸리는 시간 us",(datetime.datetime.now() - check_time).microseconds)
                 # print("유통기한 안지난 애들의 거리 ", normalize_dis)
                 if normalize_dis < bound_size+additional_bound:  # 일정한 거리를 넘어가면 배치하지않는다.
                     if normalize_dis < small_robot_dis:  # 가장 거리가 작은 로봇을 찾는다.
